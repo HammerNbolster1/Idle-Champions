@@ -84,6 +84,8 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     TotalGems := 0
     TotalSilverChests := 0
     TotalGoldChests := 0
+	;ResetStatsLog := A_LineFile . "\..\..\..\..\log-reset.csv"
+   ; PreviousResetTicks := 0
 
     __new()
     {

@@ -696,6 +696,20 @@ class IC_BrivGemFarm_Class
         if (!g_SF.WaitForModronReset(modronResetTimeout))
             g_SF.CheckifStuck(True)
             ;g_SF.CloseIC( "ModronReset, resetting exceeded " . Floor(modronResetTimeout/1000) . "s" )
+		;logfile := g_SF.ResetStatsLog
+       ; seqOnlineRun := (Mod(g_SF.Memory.ReadResetsCount() - 2, g_BrivUserSettings[ "ForceOfflineRunThreshold" ] ) + 1)
+       ; statsMsg := A_Now ; timestamp
+          ;   . "," . A_TickCount ; current tick
+           ;  . "," . (A_TickCount - g_SF.PreviousResetTicks) ; previous run duration (ticks)
+           ;  . "," . (A_TickCount - g_PreviousZoneStartTime) ; modron reset duration (ticks)
+            ; . "," . seqOnlineRun ; sequential online run
+           ;  . "," . (g_BrivUserSettings[ "ForceOfflineRunThreshold" ] = seqOnlineRun ? "TRUE" : "FALSE") ; is offline stack
+           ;  . "," . g_SF.Memory.ReadHasteStacks()
+           ;  . ",," ; reserved, reserved
+           ;  . "," . (g_SF.PreviousResetTicks ? "FALSE" : "TRUE") ; ignore
+          ;   . "," ; note
+       ; FileAppend, `n%statsMsg%, %logfile%
+       ; g_SF.PreviousResetTicks := A_TickCount
         g_PreviousZoneStartTime := A_TickCount
     }
 
