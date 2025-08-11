@@ -29,7 +29,7 @@ class IC_BrivGemFarm_Stats_Component
     PreviousRunTime := 0
     GemsSinceStart := 0
 	GemsTotal := 0
-	PlayServer :=0
+	PlayServer := 0
 	DisplayScientific := false
     SbLastStacked := ""
     
