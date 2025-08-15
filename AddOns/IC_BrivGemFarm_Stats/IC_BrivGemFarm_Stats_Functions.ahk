@@ -499,7 +499,8 @@ class IC_BrivGemFarm_Stats_Component
             if (runsMax > 1)
             {
                 GuiControl, ICScriptHub:, HybridStatsCountTitle, ForceOfflineRunThreshold Count:
-                GuiControl, ICScriptHub:, HybridStatsCountValue, % Mod( g_SF.Memory.ReadResetsCount(), runsMax )
+                ;GuiControl, ICScriptHub:, HybridStatsCountValue, % Mod( g_SF.Memory.ReadResetsCount(), runsMax )
+				GuiControl, ICScriptHub:, HybridStatsCountValue, % (Mod( g_SF.Memory.ReadResetsCount() - 1, runsMax ) + 1) " / " runsMax
             }
             else
             {
