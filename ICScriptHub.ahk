@@ -22,7 +22,7 @@ CoordMode, Mouse, Client
 ;Modron Automation Gem Farming Script
 GetScriptHubVersion()
 {
-    return "v4.0.5, 2025-08-14"
+    return "v4.0.6, 2025-08-16"
 }
 
 ;class and methods for parsing JSON (User details sent back from a server call)
@@ -59,7 +59,7 @@ if (GUIfunctions.isDarkMode)
     g_MacroButton := A_LineFile . "\..\Images\macro-dark-100x100.png"
 }
 ;Load user settings
-g_UserSettings := IC_SharedFunctions_Class.LoadObjectFromJSON( A_LineFile . "\..\Settings.json" )
+g_UserSettings := SH_SharedFunctions.LoadObjectFromJSON( A_LineFile . "\..\Settings.json" )
 ;check if first run
 If !IsObject( g_UserSettings )
 {
@@ -86,7 +86,7 @@ if ( g_UserSettings[ "CheckForUpdates" ] == "" )
 if(g_UserSettings[ "WriteSettings" ] == true)
 {
     g_UserSettings.Delete("WriteSettings")
-    IC_SharedFunctions_Class.WriteObjectToJSON( A_LineFile . "\..\Settings.json" , g_UserSettings )
+    SH_SharedFunctions.WriteObjectToJSON( A_LineFile . "\..\Settings.json" , g_UserSettings )
 }
 
 

@@ -67,7 +67,7 @@ class IC_MemoryFunctions_Class
     ;Updates installed after the date of this script may result in the pointer addresses no longer being accurate.
     GetVersion()
     {
-        return "v2.5.2, 2025-08-11"
+        return "v2.5.4, 2025-08-16"
     }
 
     GetPointersVersion()
@@ -269,6 +269,10 @@ class IC_MemoryFunctions_Class
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.inited.Read()
     }
 
+    ReadIsSplashVideoActive()
+    {
+        return this.GameManager.game.loadingScreen.SplashScreen.IsActive_k__BackingField.Read()
+    }
     ;=================
     ;Screen Resolution
     ;=================
@@ -286,6 +290,10 @@ class IC_MemoryFunctions_Class
     ;=========================================================
     ;herohandler - champion related information accessed by ID
     ;=========================================================
+    ReadClickLevel()
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].ClickLevel.Read()
+    }
 
     ReadChampListSize()
     {
@@ -772,6 +780,11 @@ class IC_MemoryFunctions_Class
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[this.GetHeroHandlerIndexByChampID(ChampID)].upgradeHandler.upgradesByUpgradeId[upgradeID].RequiredLevel.Read()
     }
 
+    ReadHeroUpgradeRequiredLevelByIndex(champID := 1, upgradeIndex := 7)
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[this.GetHeroHandlerIndexByChampID(ChampID)].upgradeHandler.upgradesByUpgradeId["key", upgradeIndex].RequiredLevel.Read()
+    }
+
     ; Checks for specialization graphic. No graphic means no spec.
     ReadHeroUpgradeIsSpec(champID := 1, upgradeID := 7)
     {
@@ -1209,9 +1222,13 @@ class IC_MemoryFunctions_Class
         return version
     }
     
-    HeroHasFeatSavedInFormation(heroID, featID, formationSlot)
+    HeroHasFeatSavedInFormation(heroID :=58, featID := 2131, formationSlot := 0)
     {
+    ;     heroID := 58
+    ;     formationSlot := this.GetSavedFormationSlotByFavorite(1)
         size := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[formationSlot].Feats[heroID].List.size.Read()
+        if(size == "")
+            return ""
         if(size <= 0 OR size > 10) ; sanity check
             return false
         Loop, %size%
@@ -1223,9 +1240,12 @@ class IC_MemoryFunctions_Class
         return false
     }
     
-    HeroHasAnyFeatsSavedInFormation(heroID, formationSlot)
+    HeroHasAnyFeatsSavedInFormation(heroID := 58, formationSlot := 0)
     {
+        ; heroID :=58
         size := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[formationSlot].Feats[heroID].List.size.Read()
+        if(size == "")
+            return ""
         if(size <= 0 OR size > 10) ; sanity check
             return false
         return true
