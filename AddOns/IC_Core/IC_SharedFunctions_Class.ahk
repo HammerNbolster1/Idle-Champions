@@ -681,7 +681,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             programLoc := g_UserSettings[ "InstallPath" ]
             try
             {
-                Run, %programLoc%
+                Run, %programLoc%, , Hide
             }
             catch
             {

@@ -125,7 +125,7 @@ Launch_Clicked()
     programLoc := g_UserSettings[ "InstallPath" ]
     try
     {
-        Run, %programLoc%
+        Run, %programLoc%, , Hide
     }
     catch
     {
