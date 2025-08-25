@@ -89,7 +89,7 @@ class IC_About_Component
         if(InStr(g_UserSettings[ "InstallPath" ], "com.epicgames.launcher:"))
             gameLocationString .= """epicgames.launcher"" (EGS)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "legendary.exe"))
-            gameLocationString .= """legendary.exe"" (Legendary)"
+            gameLocationString .= "Legendary EGS"
         else if(InStr(g_UserSettings[ "InstallPath" ], "heroic://"))
             gameLocationString .= """heroic://"" (Heroic)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "IdleDragons.exe"))
