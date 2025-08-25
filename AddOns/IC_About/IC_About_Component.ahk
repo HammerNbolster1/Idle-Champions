@@ -2,103 +2,208 @@
 GUIFunctions.AddTab("About")
 
 Gui, ICScriptHub:Tab, About
-GUIFunctions.UseThemeTextColor()
-aboutRows := 21
-aboutGroupBoxHeight := aboutRows * 15
-Gui, ICScriptHub:Add, Text, vAboutLineHeightTest w2,     
-GuiControlGet, xyVal, ICScriptHub:Pos, AboutLineHeightTest
-Gui, ICScriptHub:Add, GroupBox, xp+15 yp+15 w425 h%aboutGroupBoxHeight% vAboutVersionGroupBox, Version Info: 
-GUIFunctions.UseThemeTextColor()
-Gui, ICScriptHub:Add, Text, vAboutVersionStringID xp+20 yp+25 w400 r%aboutRows%, % IC_About_Component.GetVersionString()
-
-AboutEnabledAddonsValues := IC_About_Component.GetEnabledAddons()
-AboutAddonGroupBoxHeight := (AboutEnabledAddonsRows + 2) * (xyValH+1) + 15
-GuiControlGet, xyVal, ICScriptHub:Pos, AboutVersionGroupBox
-xyValX += 0
-xyValY += (aboutGroupBoxHeight + 15)
-Gui, ICScriptHub:Add, GroupBox, x%xyValX% y%xyValY% w425 h%AboutAddonGroupBoxHeight% vAboutAddonGroupBox, % "Enabled Addons [" . (g_UserSettings["CheckForUpdates"] ? "ON" : "OFF") . "]: "
-IC_About_Component.ShowEnabledAddons()
-; Gui, ICScriptHub:Add, Text, vAboutAddonStringID xp+20 yp+25 w400 r%AboutEnabledAddonsRows%, % AboutEnabledAddonsString
-
-if(isFunc(g_SF.Memory.GetPointersVersion) AND isFunc(g_SF.Memory.ReadGameVersion))
-{
-    IC_About_Component.AddPointerLink()
-}
+IC_About_Component.Build()
 
 class IC_About_Component
 {
-    GetVersionString()
+    EnabledAddonsValues := Array()
+    VersionStringValues := Array()
+    ServerCaller := ""
+
+    Build()
     {
         global
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vAboutLineHeightTest w2,     
+        GuiControlGet, xyVal, ICScriptHub:Pos, AboutLineHeightTest
+        IC_About_Component.GetScriptVersions()
+        aboutGroupBoxHeight := (IC_About_Component.VersionStringValues.Count() + 2) * (xyValH+1) + 15
+        Gui, ICScriptHub:Add, GroupBox, xp+15 yp+15 w425 h%aboutGroupBoxHeight% vAboutVersionGroupBox, Version Info: 
+        xyValX += 0
+        xyValY += (aboutGroupBoxHeight + 15)
+        IC_About_Component.BuildScriptVersions()
+
+        IC_About_Component.GetEnabledAddons()
+        AboutAddonGroupBoxHeight := (IC_About_Component.EnabledAddonsValues.Count() + 2) * (xyValH+1) + 15
+        GuiControlGet, xyVal, ICScriptHub:Pos, AboutVersionGroupBox
+        xyValX += 0
+        xyValY += (aboutGroupBoxHeight + 15)
+        Gui, ICScriptHub:Add, GroupBox, x%xyValX% y%xyValY% w425 h%AboutAddonGroupBoxHeight% vAboutAddonGroupBox, % "Enabled Addons: "
+        IC_About_Component.AddAddonToggle()
+        IC_About_Component.BuildEnabledAddons()
+    }
+
+    AddAddonToggle()
+    {
+        global
+        local xLoc := xyValX + GUIFunctions.GetControlSizeFromBasicText("Enabled Addons") + 10
+        Gui, ICScriptHub:Font, underline 
+        GUIFunctions.UseThemeTextColor("SpecialTextColor1", 600)
+        toggleText := "[" . (g_UserSettings["CheckForUpdates"] ? "ON" : "OFF") . "]"
+        local width := GUIFunctions.GetControlSizeFromBasicText("[OFF]") + 7
+        Gui, ICScriptHub:Add, Text, vAboutToggleAddonCheck x%xLoc% y%xyValY% w%width%, % toggleText
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Font, norm
+        toggleAddonCheckFnc := ObjBindMethod(IC_About_Component, "ToggleAddonCheck")
+        GuiControl,ICScriptHub: +g, AboutToggleAddonCheck, % toggleAddonCheckFnc
+    }
+
+    ; Refreshes game version and compares to imports. Updates UI Accordingly.
+    Refresh()
+    {
+        global AboutComponentImportsWarning, AboutComponentGameVersion, g_SF, _MemoryManager, g_ImportsGameVersion64, g_ImportsGameVersionPostFix64
+        ; local gameVersionaArch, gameVersion, xyVal, xLoc, xyValX, xyValY, xyValH, xyValW
         g_SF.Memory.OpenProcessReader()
-        local string := ""
-        string .= "Script Version: " . GetScriptHubVersion() . "`n`n"
+        gameVersionaArch := _MemoryManager.is64bit ? " (64 bit)" : " (32 bit)"
+        gameVersion := "Idle Champions Game Version: " . (g_SF.Memory.ReadGameVersion() == "" ? " -- Game not found on Script Hub load. --" : g_SF.Memory.ReadGameVersion() . gameVersionaArch)
+        GuiControl,ICScriptHub:, AboutComponentGameVersion, % gameVersion
+        GuiControl,ICScriptHub:, AboutComponentImportsWarning, % " "
+        if(g_SF.Memory.ReadGameVersion() != g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64)
+            GuiControl,ICScriptHub:, AboutComponentImportsWarning, % "Warning: Does not match game version!"
+        width := GUIFunctions.GetControlSizeFromBasicText(gameVersion)
+        GuiControlGet, xyVal, ICScriptHub:Pos, AboutComponentGameVersion
+        xLoc := xyValX + width
+        GuiControl,ICScriptHub:Move, AboutComponentRefreshLink, % "x"xLoc
+        ; Controls like to disappear sometimes when moved, so hide/show to refresh their view.
+        GuiControl,ICScriptHub:Hide, AboutComponentGameVersion
+        GuiControl,ICScriptHub:Show, AboutComponentGameVersion
+        GuiControl,ICScriptHub:Hide, AboutComponentRefreshLink
+        GuiControl,ICScriptHub:Show, AboutComponentRefreshLink
+    }
+
+    GetScriptVersions()
+    {
+        global
+        this.VersionStringValues := Array() 
+        g_SF.Memory.OpenProcessReader()
+        this.VersionStringValues.Push("Script Version: " . GetScriptHubVersion())
+        this.VersionStringValues.Push(" ")
         local gameVersionaArch := _MemoryManager.is64bit ? " (64 bit)" : " (32 bit)"
         local gameVersion := g_SF.Memory.ReadGameVersion() == "" ? " -- Game not found on Script Hub load. --" : g_SF.Memory.ReadGameVersion() . gameVersionaArch 
         if(isFunc(g_SF.Memory.ReadGameVersion))
-            string .= "Idle Champions Game Version: " . gameVersion . "`n"
+            this.VersionStringValues.Push("Idle Champions Game Version: " . gameVersion)
         if(isFunc(g_SF.Memory.GetPointersVersion))
-            string .= "Current Pointers: " . (g_SF.Memory.GetPointersVersion() ? g_SF.Memory.GetPointersVersion() : " ---- ") . "`n"
-        string .= "Imports Versions: " . (g_ImportsGameVersion32 == "" ? " ---- " : (g_ImportsGameVersion32 . g_ImportsGameVersionPostFix32 )) . (g_ImportsGameVersionPlatform32 != "" ? " " : "") . g_ImportsGameVersionPlatform32 . " (32 bit), " . (g_ImportsGameVersion64 == "" ? " ---- " : (g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64)) . (g_ImportsGameVersionPlatform64 != "" ? " " : "") . g_ImportsGameVersionPlatform64 . " (64 bit)`n"
-        string .= "Game Location: " . (g_UserSettings[ "InstallPath" ] == "explorer.exe ""com.epicgames.launcher://apps/7e508f543b05465abe3a935960eb70ac%3A48353a502e72433298f25827e03dbff0%3A40cb42e38c0b4a14a1bb133eb3291572?action=launch&silent=true""" ? "EGS" : "Legendary EGS") . "`n`n" 
+            this.VersionStringValues.Push("Current Pointers: " . (g_SF.Memory.GetPointersVersion() ? g_SF.Memory.GetPointersVersion() : " ---- "))
+        this.VersionStringValues.Push("Imports: "  . (g_ImportsGameVersion64 == "" ? " ---- " : (g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64)) . (g_ImportsGameVersionPlatform64 != "" ? " (" . g_ImportsGameVersionPlatform64 . ")" : ""))
+        local gameLocationString := "Game Location Setting: "
+        if(InStr(g_UserSettings[ "InstallPath" ], "com.epicgames.launcher:"))
+            gameLocationString .= """epicgames.launcher"" (EGS)"
+        else if(InStr(g_UserSettings[ "InstallPath" ], "legendary.exe"))
+            gameLocationString .= """legendary.exe"" (Legendary)"
+        else if(InStr(g_UserSettings[ "InstallPath" ], "heroic://"))
+            gameLocationString .= """heroic://"" (Heroic)"
+        else if(InStr(g_UserSettings[ "InstallPath" ], "IdleDragons.exe"))
+            gameLocationString .= "IdleDragons.exe (Steam/Other)"
+        else
+            gameLocationString .= "(Unknown)"
+        this.VersionStringValues.Push(gameLocationString)
+        this.VersionStringValues.Push(" ")
         if(isFunc(g_SF.Memory.GetVersion))
-            string .= "MemoryFunctions Version: " . g_SF.Memory.GetVersion() . "`n"
+            this.VersionStringValues.Push("MemoryFunctions Version: " . g_SF.Memory.GetVersion())
         if(isFunc(GameObjectStructure.GetVersion))
-            string .= "GameObjectStructure Version: " . GameObjectStructure.GetVersion() . "`n"
+            this.VersionStringValues.Push("GameObjectStructure Version: " . GameObjectStructure.GetVersion())
         if(isFunc(IC_IdleGameManager_Class.GetVersion))
-            string .= "IdleGameManager Memory: " . IC_IdleGameManager_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("IdleGameManager Memory: " . IC_IdleGameManager_Class.GetVersion())
         if(isFunc(IC_GameSettings_Class.GetVersion))
-            string .= "GameSettings Memory: " . IC_GameSettings_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("GameSettings Memory: " . IC_GameSettings_Class.GetVersion())
         if(isFunc(IC_EngineSettings_Class.GetVersion))
-            string .= "EngineSettings Memory: " . IC_EngineSettings_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("EngineSettings Memory: " . IC_EngineSettings_Class.GetVersion())
         if(isFunc(IC_CrusadersGameDataSet_Class.GetVersion))
-            string .= "CrusadersGameDataSet Memory: " . IC_CrusadersGameDataSet_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("CrusadersGameDataSet Memory: " . IC_CrusadersGameDataSet_Class.GetVersion())
         if(isFunc(IC_DialogManager_Class.GetVersion))
-            string .= "DialogManager Memory: " . IC_DialogManager_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("DialogManager Memory: " . IC_DialogManager_Class.GetVersion())
         ; if(isFunc(IC_UserStatHandler_Class.GetVersion))
-        ;     string .= "UserStatHandler Memory: " . IC_UserStatHandler_Class.GetVersion() . "`n"    
+        ;     this.VersionStringValues.Push("UserStatHandler Memory: " . IC_UserStatHandler_Class.GetVersion())
         ; if(isFunc(IC_UserData_Class.GetVersion))
-        ;     string .= "UserData Memory: " . IC_UserData_Class.GetVersion() . "`n"           
+        ;     this.VersionStringValues.Push("UserData Memory: " . IC_UserData_Class.GetVersion())
         if(isFunc(IC_ActiveEffectKeyHandler_Class.GetVersion))
-            string .= "EffectKeyHandler Memory: " . IC_ActiveEffectKeyHandler_Class.GetVersion() . "`n`n"
+            this.VersionStringValues.Push("EffectKeyHandler Memory: " . IC_ActiveEffectKeyHandler_Class.GetVersion())
+        this.VersionStringValues.Push(" ")
         if(isFunc(IC_SharedFunctions_Class.GetVersion))
-            string .= "SharedFunctions Version: " . IC_SharedFunctions_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("SharedFunctions Version: " . IC_SharedFunctions_Class.GetVersion())
         if(isFunc(IC_ServerCalls_Class.GetVersion))
-            string .= "ServerCalls Version: " . IC_ServerCalls_Class.GetVersion() . "`n"
+            this.VersionStringValues.Push("ServerCalls Version: " . IC_ServerCalls_Class.GetVersion())
         if(isFunc(_classLog.GetVersion))
-            string .= "Log Class Version: " . _classLog.GetVersion() . "`n"
-        string .= "`nAHK Version: " . A_AhkVersion
-        return string
+            this.VersionStringValues.Push("Log Class Version: " . _classLog.GetVersion())
+        this.VersionStringValues.Push("`nAHK Version: " . A_AhkVersion)
+    }
+
+    BuildScriptVersions()
+    {
+        global ;xyValX, AboutPointerChangeLink
+        local k, v, height
+        GuiControlGet, posVal, ICScriptHub:Pos, AboutLineHeightTest
+        height := posValH + 1
+        xyValX := xyValX + 36
+        Gui, ICScriptHub:Add, Text, x%xyValX% yp+10 w0
+        GUIFunctions.UseThemeTextColor()
+        for k,v in this.VersionStringValues
+        {
+            if(InStr(v, "Game Version:"))
+            {
+                Gui, ICScriptHub:Add, Text, vAboutComponentGameVersion x%xyValX% yp+%height% r1, % v
+                Gui, ICScriptHub:Font, underline 
+                GUIFunctions.UseThemeTextColor("SpecialTextColor1", 600)
+                Gui, ICScriptHub:Add, Text, x+6 vAboutComponentRefreshLink, Refresh
+                GUIFunctions.UseThemeTextColor()
+                Gui, ICScriptHub:Font, norm
+                AboutComponentRefresh := ObjBindMethod(IC_About_Component, "Refresh")
+                GuiControl,ICScriptHub: +g, AboutComponentRefreshLink, % AboutComponentRefresh
+                Continue
+            }
+            else if(InStr(v, "Imports:") AND g_SF.Memory.ReadGameVersion() != g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64)
+            {   
+                Gui, ICScriptHub:Add, Text, x%xyValX% yp+%height% r1, % v
+                GUIFunctions.UseThemeTextColor("WarningTextColor", 600) 
+                Gui, ICScriptHub:Add, Text, vAboutComponentImportsWarning x+6 r1, % "Warning: Does not match game version!"
+                GUIFunctions.UseThemeTextColor()
+                Continue
+            }    
+            else if(Instr(v,"Current Pointers:"))
+            {
+                Gui, ICScriptHub:Add, Text, x%xyValX% yp+%height% r1, % v
+                Gui, ICScriptHub:Font, underline 
+                GUIFunctions.UseThemeTextColor("SpecialTextColor1", 600)
+                Gui, ICScriptHub:Add, Text, vAboutPointerChangeLink x+6, Change
+                GUIFunctions.UseThemeTextColor()
+                Gui, ICScriptHub:Font, norm
+                runVersionPicker := ObjBindMethod(IC_About_Component, "AboutRunPointerVersionPicker")
+                GuiControl,ICScriptHub: +g, AboutPointerChangeLink, % runVersionPicker
+                Continue
+            }
+            Gui, ICScriptHub:Add, Text, x%xyValX% yp+%height% w380 r1, % v
+        }
     }
 
     GetEnabledAddons()
     {
         string := ""
-        global AboutEnabledAddonsRows := 0
         enabledAddons := Array()
         for k,v in AddonManagement.EnabledAddons
         {
-            if(v.MostRecentVer != "" AND SH_VersionHelper.IsVersionNewer(v.MostRecentVer, v.Version))
-                string := v.Name . " Version: " . v.Version . "`t -- Out of Date (" . v.MostRecentVer . ") -- `n" 
+            if(g_UserSettings[ "CheckForUpdates" ] == True)
+                mostRecent := this.GetMostRecentVersion(v.Url)
+            if(mostRecent != "" AND SH_VersionHelper.IsVersionNewer(mostRecent, v.Version))
+                string := v.Name . " Version: " . v.Version . "`t -- Out of Date (" . mostRecent . ") -- `n" 
             else
                 string := v.Name . " Version: " . v.Version . "`n"
             
             enabledAddons.Push(string)
-            AboutEnabledAddonsRows++
         }
+        this.EnabledAddonsValues := enabledAddons
         return enabledAddons
     }
 
-    ShowEnabledAddons()
+    BuildEnabledAddons()
     {
-        global AboutEnabledAddonsValues
-        global xyValX
+        global
         GuiControlGet, posVal, ICScriptHub:Pos, AboutLineHeightTest
-        height := posValH + 1
+        local height := posValH + 1
+        local k,v
         xyValX := xyValX + 20
         Gui, ICScriptHub:Add, Text, x%xyValX% yp+10 w0
         GUIFunctions.UseThemeTextColor()
-        for k,v in AboutEnabledAddonsValues
+        for k,v in this.EnabledAddonsValues
         {
             if(InStr(v, "Out of Date"))
             {   
@@ -109,33 +214,6 @@ class IC_About_Component
             }    
             Gui, ICScriptHub:Add, Text, x%xyValX% yp+%height% w400 r1, % v
         }
-        xyValX := xyVal - 20
-    }
-
-    AddPointerLink()
-    {
-        global AboutPointerChangeLink
-        global AboutPointerChangeLinkText1
-        global AboutPointerChangeLinkText2
-        string := "Current Pointers: " . (g_SF.Memory.GetPointersVersion() ? g_SF.Memory.GetPointersVersion() : " ---- ") . "`n"
-        GuiControlGet, pos, ICScriptHub:Pos, AboutVersionGroupBox
-        yLocation := posY + 63
-        Gui, ICScriptHub:Add, Text, vAboutPointerChangeLinkText1 Hidden, %string%
-        Gui, ICScriptHub:Add, Text, vAboutPointerChangeLinkText2 Hidden x+1, .
-        GuiControlGet, pos, ICScriptHub:Pos, AboutPointerChangeLinkText1
-        posXStart := posX
-        GuiControlGet, pos, ICScriptHub:Pos, AboutPointerChangeLinkText2
-        posXEnd := posX
-        xWidth := posXEnd - posXstart
-        xLocation := posXStart + 5 + xWidth
-
-        Gui, ICScriptHub:Font, underline 
-        GUIFunctions.UseThemeTextColor("SpecialTextColor1", 600)
-        Gui, ICScriptHub:Add, Text, vAboutPointerChangeLink x%xLocation% y%yLocation% , Change
-        GUIFunctions.UseThemeTextColor()
-        Gui, ICScriptHub:Font, norm
-        runVersionPicker := ObjBindMethod(IC_About_Component, "AboutRunPointerVersionPicker")
-        GuiControl,ICScriptHub: +g, AboutPointerChangeLink, % runVersionPicker
     }
 
     AboutRunPointerVersionPicker()
@@ -144,5 +222,30 @@ class IC_About_Component
         versionPickerLoc := A_LineFile . "\..\..\IC_Core\IC_VersionPicker.ahk"
         Run, %versionPickerLoc%
         ExitApp
+    }
+
+    ToggleAddonCheck()
+    {
+        g_UserSettings[ "CheckForUpdates" ] := ! g_UserSettings[ "CheckForUpdates" ]    
+        GuiControl,ICScriptHub:, AboutToggleAddonCheck, % "[" . (g_UserSettings["CheckForUpdates"] ? "ON" : "OFF") . "]"
+        GuiControl,ICScriptHub:Hide, AboutToggleAddonCheck
+        GuiControl,ICScriptHub:Show, AboutToggleAddonCheck
+        SaveUserSettings()
+    }
+
+    GetMostRecentVersion(remoteUrl)
+    {
+        if(this.ServerCaller == "")
+            this.ServerCaller := new SH_ServerCalls()
+        if(InStr(remoteUrl, "https://github.com"))
+        {
+            remoteUrl := StrReplace(remoteUrl, "https://github.com", "https://raw.githubusercontent.com")
+            remoteUrl := StrReplace(remoteUrl, "/tree/", "/refs/heads/")
+            remoteUrl := remoteUrl . "/Addon.json"
+            addonInfo := this.ServerCaller.BasicServerCall(remoteURL) 
+            return addonInfo["Version"]
+        }
+        else
+            return ""
     }
 }
