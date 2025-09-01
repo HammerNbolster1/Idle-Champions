@@ -89,7 +89,7 @@ class IC_About_Component
         if(InStr(g_UserSettings[ "InstallPath" ], "com.epicgames.launcher:"))
             gameLocationString .= """epicgames.launcher"" (EGS)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "legendary.exe"))
-            gameLocationString .= "Legendary EGS"
+            gameLocationString .= """legendary.exe"" (Legendary)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "heroic://"))
             gameLocationString .= """heroic://"" (Heroic)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "IdleDragons.exe"))
@@ -125,7 +125,7 @@ class IC_About_Component
             this.VersionStringValues.Push("ServerCalls Version: " . IC_ServerCalls_Class.GetVersion())
         if(isFunc(_classLog.GetVersion))
             this.VersionStringValues.Push("Log Class Version: " . _classLog.GetVersion())
-		this.VersionStringValues.Push(" ")
+        this.VersionStringValues.Push(" ")
         this.VersionStringValues.Push("AHK Version: " . A_AhkVersion)
     }
 
