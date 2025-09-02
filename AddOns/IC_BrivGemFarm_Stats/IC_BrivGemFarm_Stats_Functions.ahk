@@ -528,10 +528,10 @@ class IC_BrivGemFarm_Stats_Component
 		GuiControl, ICScriptHub:, GemsPhrID, % this.DecideScientific(this.GemsPerHour)
 	}
 	
-	DecideScientific(val)
-    {
-        return this.DisplayScientific ? this.SN(val, 4) : this.TS(val)
-    }
+DecideScientific(val)
+{
+    return this.DisplayScientific ? g_SF.GetScientificNotation(val, 3) : g_SF.AddThousandsSeperator(val)
+}
 	
 
     
@@ -683,27 +683,4 @@ class IC_BrivGemFarm_Stats_Component
             SetTimer, %k%, Delete
         }
     }
-
-
-	TS(val)
-	{
-		if (!(val is number) || Abs(val) < 1000)
-			return val
-		return RegExReplace(val, "(\G|[^\d, ])\d{1,3}(?=(\d{3})+(\D|$))", "$0,")
-	}	
-
-	; Scientific Notation
-	SN(val, minExponents := 4, thousandsSeparate := true)
-	{
-		if !(val is number)
-			return val
-		sciNote := Format("{:2.2e}", val)
-		ePos := InStr(sciNote, "e")
-		postExp := Format("{:02d}", SubStr(sciNote, ePos+2))
-		if (postExp < minExponents)
-			return thousandsSeparate ? this.TS(val) : val
-		signExp := SubStr(sciNote, ePos+1, 1)
-		return SubStr(sciNote, 1, ePos) . (signExp=="+" ? "" : signExp) . postExp
-	}
-
 }
