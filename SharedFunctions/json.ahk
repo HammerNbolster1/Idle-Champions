@@ -28,7 +28,7 @@ class JSON {
 		if jsObject := this.verify(script)
 			return js ? jsObject : this._CreateObject(jsObject)
 		else
-			return false
+			return script ; Changed to returns original rather than false on fail
 	}
 	
 	print(object, js := false, indent := "") {
@@ -138,13 +138,11 @@ class JSON {
 	
 	verify(script) {
 		try
+		{
 			jsObject := this.JS.eval("(" . script . ")")
-		catch {
-			Sleep, 500
-			return false
+			return jsObject ; Modified by Antilectual to maintain basic string reads from json file. jsObject is truthy.
 		}
-		
-		return jsObject ; Modified by Antilectual to maintain basic string reads from json file. jsObject is truthy.
+		return false
 	}
 	
 	_ObjToString(object) {
