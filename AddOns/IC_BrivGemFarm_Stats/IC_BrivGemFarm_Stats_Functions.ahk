@@ -104,7 +104,7 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Font, w400
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Current Area Time (s):
         Gui, ICScriptHub:Add, Text, vdtCurrentLevelTimeID x+2 w200, ; % dtCurrentLevelTime
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Current `Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Current `Run Time (s):
         Gui, ICScriptHub:Add, Text, vdtCurrentRunTimeID x+2 w50, ; % dtCurrentRunTime
 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10, SB Stack `Count:
