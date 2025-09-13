@@ -199,7 +199,7 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h150 vBrivGemFarmStatsID, BrivGemFarm Stats:
         Gui, ICScriptHub:Font, w400 
 		Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, PlayServer: ps
-		Gui, ICScriptHub:Add, Text,  vPlayServerID x+1 w175 ;PlayServer
+		Gui, ICScriptHub:Add, Text, vPlayServerID x+1 w175,
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Boss Levels Hit `This `Run:
         Gui, ICScriptHub:Add, Text, vBossesHitThisRunID x+2 w200, 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Boss Levels Hit Since Start:
@@ -417,7 +417,8 @@ class IC_BrivGemFarm_Stats_Component
             this.GemsSinceStart := ( g_SF.Memory.ReadGems() - this.GemStart ) + ( g_SF.Memory.ReadGemsSpent() - this.GemSpentStart )
 			this.GemsTotal := g_SF.Memory.ReadGems()
 			this.GemsPerHour := Round( this.GemsSinceStart / dtTotalTime, 3 )	
-			this.PlayServer := RegExReplace(g_SF.Memory.ReadWebRoot(), "[^0-9]", "")			
+			this.PlayServer := RegExReplace(g_SF.Memory.ReadWebRoot(), "[^0-9]", "")
+			
 			GuiControl, ICScriptHub:, bossesPhrID, % this.DecideScientific(this.BossesPerHour)
 			GuiControl, ICScriptHub:, GemsSinceStartID, % this.DecideScientific(this.GemsSinceStart)
 			GuiControl, ICScriptHub:, GemsTotalID, % this.DecideScientific(this.GemsTotal)
