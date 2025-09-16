@@ -22,7 +22,7 @@ CoordMode, Mouse, Client
 ;Modron Automation Gem Farming Script
 GetScriptHubVersion()
 {
-    return "v4.0.6, 2025-08-16" ; Must be line 25 for version checking to work.
+    return "v4.1.0, 2025-09-09" ; Must be line 25 for version checking to work.
 }
 
 ;class and methods for parsing JSON (User details sent back from a server call)
@@ -37,7 +37,7 @@ global g_SCKeyMap:= {}
 KeyHelper.BuildVirtualKeysMap(g_KeyMap, g_SCKeyMap)
 global g_ServerCall
 global g_UserSettings := {}
-global g_TabControlHeight := 630
+global g_TabControlHeight := 700
 global g_TabControlWidth := 430
 global g_InputsSent := 0
 global g_TabList := ""
@@ -256,3 +256,7 @@ MiniScriptWarning()
             return True
     }
 }
+
+; Refresh GUI after all addons loaded.
+GuiControl, ICScriptHub:Move, ModronTabControl, % "w" . g_TabControlWidth . " h" . g_TabControlHeight
+Gui, ICScriptHub:show, % "w" . g_TabControlWidth+5 . " h" . g_TabControlHeight

@@ -9,47 +9,10 @@ global g_KeyPresses := {}
 global g_SharedData := new IC_SharedData_Class
 g_SF := new IC_SharedFunctions_Class
 
+#include %A_LineFile%\..\IC_SharedData_Class.ahk
 #include %A_LineFile%\..\..\..\SharedFunctions\SH_SharedFunctions.ahk
 #include %A_LineFile%\..\MemoryRead\IC_MemoryFunctions_Class.ahk
 
-class IC_SharedData_Class
-{
-    ; Note stats vs States. Confusing, but intended.
-    StackFailStats := new StackFailStates
-    LoopString := ""
-    TotalBossesHit := 0
-    BossesHitThisRun := 0
-    SwapsMadeThisRun := 0
-    StackFail := 0
-    OpenedSilverChests := 0
-    OpenedGoldChests := 0
-    PurchasedGoldChests := 0
-    PurchasedSilverChests := 0
-    ShinyCount := 0
-    TriggerStart := false
-    TotalRollBacks := 0
-    BadAutoProgress := 0
-    PreviousStacksFromOffline := 0
-    TargetStacks := 0
-    ShiniesByChamp := {}
-    ShiniesByChampJson := ""
-
-    Close()
-    {
-        ExitApp
-    }
-
-    ReloadSettings(ReloadSettingsFunc)
-    {
-        reloadFunc := Func(ReloadSettingsFunc)
-        reloadFunc.Call()
-    }
-
-    ShowGUI()
-    {
-        Gui, show
-    }
-}
 
 class StackFailStates
 {
@@ -110,12 +73,8 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     IsChampInFormation(champID, formation)
     {
         for k, v in formation
-        {
             if ( v == champID )
-            {
                 return true
-            }
-        }
         return false
     }
 
@@ -157,15 +116,18 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         StartTime := A_TickCount
         ElapsedTime := 0
         counter := 0
-        sleepTime := 67
+        sleepTime := 60
         g_SharedData.LoopString := "Killing boss before stacking."
         while ( !mod( this.Memory.ReadCurrentZone(), 5 ) AND ElapsedTime < maxLoopTime )
         {
             ElapsedTime := A_TickCount - StartTime
-            this.DirectedInput(,,"{e}")
-            if(!this.Memory.ReadQuestRemaining()) ; Quest complete, still on boss zone. Skip boss bag.
-                this.ToggleAutoProgress(1,0,false)
-            Sleep, %sleepTime%
+            if( ElapsedTime > (counter * sleepTime)) ; input limiter..
+            {
+                this.DirectedInput(,,"{e}")
+                if(!this.Memory.ReadQuestRemaining()) ; Quest complete, still on boss zone. Skip boss bag.
+                    this.ToggleAutoProgress(1,0,false)
+            }
+            Sleep, 20
         }
         if(ElapsedTime >= maxLoopTime)
             return 0
@@ -193,7 +155,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         StartTime := A_TickCount
         ElapsedTime := 0
         counter := 0
-        sleepTime := 67
+        sleepTime := 250
         g_SharedData.LoopString := "Falling back from boss zone."
         while ( !mod( this.Memory.ReadCurrentZone(), 5 ) AND ElapsedTime < maxLoopTime )
         {
@@ -323,7 +285,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         StartTime := A_TickCount
         ElapsedTime := 0
         counter := 0
-        sleepTime := 20
+        sleepTime := 75
         g_SharedData.LoopString := "Waiting for Transition..."
         while ( this.Memory.ReadTransitioning() == 1 and ElapsedTime < maxLoopTime )
         {
@@ -542,8 +504,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             g_SharedData.SwapsMadeThisRun++
             return
         }
-        ; TODO: Fix check to not fail when the formation hasn't finished deploying (out of gold to purchase champs etc.)
-        isFormation2 := this.IsCurrentFormation(this.Memory.GetFormationByFavorite(2))
+        isFormation2 := this.Memory.ReadMostRecentFormationFavorite() == 2
         isWalkZone := this.Settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50)] == 0
         ; check to swap briv from favorite 2 to favorite 3 (W to E)
         if (!brivBenched AND isFormation2 AND isWalkZone)
@@ -638,7 +599,8 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         timeoutVal := 32000 + 90000 ; 32s + waitforgameready timeout
         loadingDone := false
         g_SharedData.LoopString := "Starting Game"
-        WinGetActiveTitle, savedActive
+        ; WinGetActiveTitle, savedActive
+        WinGet, savedActive, ID, A
         this.SavedActiveWindow := savedActive
         StartTime := A_TickCount
         while ( !loadingZone AND ElapsedTime < timeoutVal )
@@ -711,7 +673,8 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         ; Process exists, wait for the window:
         while(!(this.Hwnd := WinExist( "ahk_exe " . g_userSettings[ "ExeName"] )) AND ElapsedTime < timeoutLeft)
         {
-            WinGetActiveTitle, savedActive
+            
+            WinGet, savedActive, ID, A
             this.SavedActiveWindow := savedActive
             ElapsedTime := A_TickCount - StartTime
             Sleep, 62
@@ -796,7 +759,22 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     ;Reopens Idle Champions if it is closed. Calls RecoverFromGameClose after opening IC. Returns true if window still exists.
     SafetyCheck()
     {
-        ; TODO: Base case check in case safety check never succeeds in opening the game.
+        static hasStartedSafetyCheck := False
+        static safetyCheckStartTime := 0
+        static safetyCheckTimeout := 900000 ; 15 minutes
+        
+        ; Base case check in case safety check never succeeds in opening the game.
+        if(!hasStartedSafetyCheck)
+        {
+            hasStartedSafetyCheck := True
+            safetyCheckStartTime := A_TickCount
+        }
+        else if (A_TickCount - safetyCheckStartTime > safetyCheckTimeout)
+        {
+            MsgBox, % "Still could not start game after " . safetyCheckOutTime / 1000 / 60 . "minutes. `nCheck game location settings. `nEnding run."
+            ExitApp
+        }
+
         if (Not WinExist( "ahk_exe " . g_userSettings[ "ExeName"] ))
         {
             if(this.OpenIC() == -1)
@@ -808,6 +786,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
                 this.WorldMapRestart()
             this.RecoverFromGameClose(this.GameStartFormation)
             this.BadSaveTest()
+            hasStartedSafetyCheck := False
             return false
         }
          ; game loaded but can't read zone? failed to load proper on last load? (Tests if game started without script starting it)
@@ -820,6 +799,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             this.Memory.OpenProcessReader()
             this.ResetServerCall()
         }
+        hasStartedSafetyCheck := False
         return true
     }
 
@@ -1241,10 +1221,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     {
         isInParty := this.IsChampInFormation( ActiveEffectKeySharedFunctions.Thellora.HeroID, this.Memory.GetCurrentFormation() )
         if (isInParty)
-        {
-            rushStacks := ActiveEffectKeySharedFunctions.Thellora.ThelloraPlateausOfUnicornRunHandler.ReadRushStacks()
-            return rushStacks
-        }
+            return ActiveEffectKeySharedFunctions.Thellora.ThelloraPlateausOfUnicornRunHandler.ReadRushStacks()
         return 0
     }
 
