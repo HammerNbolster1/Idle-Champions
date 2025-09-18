@@ -643,7 +643,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             programLoc := g_UserSettings[ "InstallPath" ]
             try
             {
-                Run, %programLoc%, , Hide
+                Run, %programLoc%
             }
             catch
             {
@@ -703,7 +703,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         while( ElapsedTime < timeout AND !gameStarted)
         {
             gameStarted := this.Memory.ReadGameStarted()
-			if (this.Memory.ReadIsSplashVideoActive() == 1)
+            if (this.Memory.ReadIsSplashVideoActive() == 1)
                 this.DirectedInput(,,"{Esc}")
             ; If the popup warning message about failed offline progress, restart the game.
             ; if(this.Memory.ReadDialogActiveBySlot(this.Memory.GetDialogSlotByName("DontShowAgainDialog")) == 1)
