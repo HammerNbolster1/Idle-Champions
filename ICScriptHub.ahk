@@ -127,9 +127,13 @@ Reload_Clicked()
 Launch_Clicked()
 {
     programLoc := g_UserSettings[ "InstallPath" ]
+    runHidden := g_UserSettings[ "RunHidden" ]
     try
     {
-        Run, %programLoc%, , Hide
+        if (runHidden)
+            Run, %programLoc%,, Hide
+        else
+            Run, %programLoc%
     }
     catch
     {
