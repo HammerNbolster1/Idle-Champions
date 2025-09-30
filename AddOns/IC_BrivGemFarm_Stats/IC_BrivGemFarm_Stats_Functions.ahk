@@ -32,6 +32,7 @@ class IC_BrivGemFarm_Stats_Component
 	PlayServer := 0
 	DisplayScientific := false
     SbLastStacked := ""
+	
     
     SharedRunData[]
     {
