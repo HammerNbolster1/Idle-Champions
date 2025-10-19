@@ -4,12 +4,13 @@
 #NoEnv ; Avoids checking empty variables to see if they are environment variables.
 ListLines Off
 
-
 #include %A_LineFile%\..\..\IC_Core\IC_SharedData_Class.ahk
 #include %A_LineFile%\..\..\IC_Core\IC_SaveHelper_Class.ahk
 #include %A_LineFile%\..\..\..\SharedFunctions\json.ahk
+#include %A_LineFile%\..\..\..\SharedFunctions\SH_UpdateClass.ahk
 #include %A_LineFile%\..\..\..\ServerCalls\SH_ServerCalls_Includes.ahk
 #include %A_LineFile%\..\..\..\SharedFunctions\ObjRegisterActive.ahk
+#include %A_LineFile%\..\IC_BrivGemFarm_Coms.ahk
 
 global g_BrivServerCall := new IC_BrivGemFarm_ServerCalls_Class
 global g_SaveHelper := new IC_SaveHelper_Class
@@ -18,6 +19,13 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
 {
     ServerSettings := ""
     FncsToCall := {}
+    ServerRateBuy := 250
+    ServerRateOpen := 1000
+    GoldChestCost := 500
+    SilverChestCost := 50
+    GemFarmGUID := ""
+    SHGUID := ""
+    OverridesFile := A_LineFile . "\..\ServerCallLocationOverride_Settings.json"
 
     __New()
     {
@@ -31,7 +39,7 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
     ; Load global server call Settings into this class.
     LoadSettings(settingsLoc := "")
     {
-        settingsLoc := settingsLoc ? settingsLoc : A_LineFile . "\..\..\..\ServerCalls\Settings.json"
+        settingsLoc := settingsLoc ? settingsLoc : A_LineFile . "\..\..\..\ServerCalls\Settings.json" ; main hub server settings.
         this.Settings := this.LoadObjectFromJSON( settingsLoc )
         if(IsObject(this.Settings))
             this.proxy := this.settings["ProxyServer"] . ":" . this.settings["ProxyPort"]
@@ -40,9 +48,13 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
     ; Load script defined server call Settings into this class.
     LoadServerCallSettings()
     {
-        this.ServerSettings := this.LoadObjectFromJSON( A_LineFile . "\..\ServerCall_Settings.json" )
+        if(FileExist(this.OverridesFile))
+            this.SettingsFileLocation := (this.LoadObjectFromJSON(this.OverridesFile)).loc
+        else
+            this.SettingsFileLocation := A_LineFile . "\..\ServerCall_Settings.json"             
+        this.ServerSettings := this.LoadObjectFromJSON(this.SettingsFileLocation)
         ; test saved parameters on following line.
-        ; this.ServerSettings["Calls"] := {"CallLoadAdventure" : [this.CurrentAdventure]}
+        ; this.ServerSettings["Calls"] := {"DoChests" : [999999,999999,999999999]}
         for k, v in this.ServerSettings
             if (k != "Calls")
                 this[k] := v
@@ -54,19 +66,11 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
         this.UserSettings := this.LoadObjectFromJSON( A_LineFile . "\..\BrivGemFarmSettings.json" )
     }
 
-    ; Load gem farm com object GUID into this class.
-    LoadGemFarmConnection()
+    SaveServerSettings()
     {
-        this.GemFarmGUID := this.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
-        if (this.GemFarmGUID != "")
-        {
-            try
-            {
-                this.SharedData := ComObjActive(GemFarmGUID)
-            }
-        }
+        this.WriteObjectToJSON( this.SettingsFileLocation, this.ServerSettings )
     }
-
+    
     ; Execute any function calls passed to this class via arguments or saved in script defined server call settings file.
     LaunchCalls()
     {
@@ -79,10 +83,38 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
             fnc.Call()
             return
         }
-        for fnc, args in this.ServerSettings.Calls
-            g_BrivServerCall.FncsToCall[fnc] := ObjBindMethod(this, fnc, args*)
-        for name, fnc in this.FncsToCall
-            fnc.Call()
+        size := this.ServerSettings.Calls.Length()
+        if(size <= 50) ; Small Sanity check - hard limit of 50 calls. Don't do calls if greater than this many. Just delete them and start over.
+        {
+            loop, %size%
+                for fnc, args in this.ServerSettings["Calls"][A_Index]
+                    this.FncsToCall.Push(ObjBindMethod(this, fnc, args*))
+            for name, fnc in this.FncsToCall
+                fnc.Call()
+        }
+        this.ServerSettings.Delete("Calls") ; clear calls
+        this.SaveServerSettings()
+        this.RemoveOverrides()
+    }
+
+    ; Load gem farm com object GUID into this class.
+    LoadGemFarmConnection()
+    {
+        this.GemFarmGUID := this.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
+        if (this.GemFarmGUID != "")
+        {
+            try
+            {
+                this.SharedData := ComObjActive(this.GemFarmGUID)
+            }
+        }
+    }
+
+    RemoveOverrides()
+    {
+        filename := this.OverridesFile
+        if(FileExist(filename))
+            FileDelete, %filename%
     }
 
     ; Sends calls for buying or opening chests and tracks chest metrics.
@@ -99,29 +131,9 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
         if (!this.UserSettings[ "BuyChests" ] AND (numSilverChests <= this.UserSettings["MinSilverChestCount"] AND numGoldChests <= this.UserSettings["MinGoldChestCount"]))
             return
         ; no chests to do (not opening and not enough gems to buy)
-        if (!this.UserSettings[ "OpenChests" ] AND (totalGems -  g_BrivUserSettings[ "MinGemCount" ] < 50))
+        if (!this.UserSettings[ "OpenChests" ] AND (totalGems -  this.UserSettings[ "MinGemCount" ] < 50))
             return
-
-        hybridStackTimeout := Min(this.UserSettings[ "ForceOfflineRunThreshold" ] * 15000, 300000)  ; 5 minute timeout (20 hybrid runs), or 15s per run if < 20
-
-        StartTime := A_TickCount
-        ElapsedTime := 0
-        doHybridStacking := ( this.UserSettings[ "ForceOfflineGemThreshold" ] > 0 ) OR ( this.UserSettings[ "ForceOfflineRunThreshold" ] > 1 )
-
-        if (doHybridStacking) ; buy/open at until user's min chests + serverRate >= chests left
-        {
-            ; < runTime * hybridCount (don't want to be double running purchase scripts) ; alternatively shared com flag?
-            while(ElapsedTime < hybridStackTimeout)
-            {
-                if !(this.DoChestsAndContinue(numSilverChests, numGoldChests, totalGems)) ; Until Error or no chests opened/closed.
-                    break
-                ElapsedTime := A_TickCount - StartTime
-            }
-        }
-        else
-            this.DoChestsAndContinue(numSilverChests, numGoldChests, totalGems)     
-               
-        return loopString
+        this.DoChestsAndContinue(numSilverChests, numGoldChests, totalGems)     
     }
 
     ; Tests for if chests should be bought or opened before doing so.
@@ -129,22 +141,21 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
     {
         ; not in defs, needs to be tested to know if the max has changed
         ; maxes accurate as of 9/9/2025
-        serverRateBuy := 250
-        serverRateOpen := 1000
-        goldChestCost := 500
-        silverChestCost := 50
+        serverRateBuy := this.ServerRateBuy
+        serverRateOpen := this.ServerRateOpen
+        goldChestCost := this.GoldChestCost
+        silverChestCost := this.SilverChestCost
 
         responses := {}
         doContinue :=   True
         gems := totalGems - this.UserSettings[ "MinGemCount" ] ; gems left to buy with
-        gemsSilver := gems * this.UserSettings[ "BuySilverChestRatio" ] ; portion to silver
-        gemsGold := gems * this.UserSettings[ "BuyGoldChestRatio" ] ; portion to gold
+        gemsSilver := silverChestCost * this.UserSettings[ "BuySilverChestRatio" ] * serverRateBuy ; portion to silver
+        gemsGold := goldChestCost * this.UserSettings[ "BuyGoldChestRatio" ] * serverRateBuy ; portion to gold
 
         ; BUYCHESTS -  wait until can do a max server call of golds or max server call of silvers - then do both - if WaitToBuyChests set
-        isMaxReady := ((Floor(gemsSilver / silverChestCost) > serverRateBuy OR Floor(gemsGold / goldChestCost) > serverRateBuy))
+        isMaxReady := gems >= gemsSilver + gemsGold ; ((Floor(gemsSilver / silverChestCost) >= serverRateBuy OR Floor(gemsGold / goldChestCost) >= serverRateBuy))
         if (this.UserSettings[ "BuyChests" ] AND ((this.UserSettings[ "WaitToBuyChests" ] AND isMaxReady) OR !this.UserSettings[ "WaitToBuyChests" ]))
         {
-            
             amount := Floor(gemsSilver / silverChestCost)
             responses.Push(this.BuyChests( chestID := 1, amount ))
             amount := Floor(gemsGold / goldChestCost) 
@@ -177,7 +188,7 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
             }
         }
         if (!doContinue)
-            this.WriteObjectToJSON( A_LineFile . "\..\LastBadChestCallResponse.json", lastErrResponse )
+            this.WriteObjectToJSON( A_LineFile . "\..\CurrentLastBadChestCallResponse.json", lastErrResponse )
         return doContinue
     }
 
@@ -195,15 +206,25 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
     */
     BuyChests( chestID := "", numChests := "")
     {
+        gemsSpent := 0
         if (numChests <= 0 or chestID <= 0)
             return 0
+        if (numChests > this.ServerRateBuy)
+            numChests := this.ServerRateBuy
         response := g_BrivServerCall.CallBuyChests( chestID, numChests )
         if !(response.okay AND response.success)
             return response
-        ; g_SF.TotalSilverChests := (chestID == 1) ? response.chest_count : g_SF.TotalSilverChests
-        this.SharedData.PurchasedSilverChests += chestID == 1 ? numChests : 0
-        this.SharedData.PurchasedGoldChests += chestID == 2 ? numChests : 0
-        this.CurrencyRemaining := response.currency_remaining
+        if(response.currency_remaining != "")
+        {
+            gemsSpent += (chestID == 1) ? numchests * 50 : 0 ; Purchased silver chests
+            gemsSpent += (chestID == 2) ? numchests * 500 : 0 ; Purchased gold chests
+        }
+        try
+        {
+            this.SharedData.GemsSpent += gemsSpent
+            this.SharedData.PurchasedSilverChests += chestID == 1 ? numChests : 0
+            this.SharedData.PurchasedGoldChests += chestID == 2 ? numChests : 0
+        }
         return okToContinue := 1
     }
 
@@ -223,12 +244,17 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
     {
         if (numChests <= 0 or chestID <= 0)
             return 0
+        if (numChests > this.ServerRateOpen)
+            numChests := this.ServerRateOpen
         chestResults := g_BrivServerCall.CallOpenChests( chestID, numChests )
         if (!chestResults.success)
             return chestResults
-        this.SharedData.OpenedSilverChests += (chestID == 1) ? numChests : 0
-        this.SharedData.OpenedGoldChests += (chestID == 2) ? numChests : 0
-        this.SharedData.ShinyCount += g_SF.ParseChestResults( chestResults )
+        try
+        {
+            this.SharedData.OpenedSilverChests += (chestID == 1) ? numChests : 0
+            this.SharedData.OpenedGoldChests += (chestID == 2) ? numChests : 0
+            this.SharedData.ShinyCount += g_SF.ParseChestResults( chestResults )
+        }
         if (chestResults.chests_remaining < numChests)
             return "Not enough chests remaining to continue opening."
         return okToContinue := 1
@@ -243,7 +269,7 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
         stacks := g_SaveHelper.GetEstimatedStackValue(stacks)
         userData := g_SaveHelper.GetCompressedDataFromBrivStacks(stacks)
         checksum := g_SaveHelper.GetSaveCheckSumFromBrivStacks(stacks)
-        save :=  g_SaveHelper.GetSave(userData, checksum, this.userID, this.userHash, this.networkID, this.clientVersion, this.instanceID)
+        save :=  g_SaveHelper.GetSave(userData, checksum, this.ServerSettings.UserID, this.ServerSettings.UserHash, this.ServerSettings.networkID, this.ServerSettings.clientVersion, this.ServerSettings.InstanceID)
         this.ServerCallSave(save)
     }
 
@@ -266,13 +292,14 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
         if (!objectJSON)
             return
         objectJSON := JSON.Beautify( objectJSON )
-        FileDelete, %FileName%
+        if(FileExist(FileName))
+            FileDelete, %FileName%
         FileAppend, %objectJSON%, %FileName%
         return
     }
 }
 
-g_BrivServerCall.SharedData.ServerCallsAreComplete := False
+#include %A_LineFile%\..\IC_BrivGemFarm_Extra_ServerCall_Mods.ahk
+
 g_BrivServerCall.LaunchCalls()
-g_BrivServerCall.SharedData.ServerCallsAreComplete := True
 ExitApp

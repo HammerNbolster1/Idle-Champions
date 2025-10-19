@@ -32,8 +32,6 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
         g_BrivUserSettings[ "OpenChests" ] := 1
     if ( g_BrivUserSettings[ "MinGemCount" ] == "" )
         g_BrivUserSettings[ "MinGemCount" ] := 0
-    
-    ; New
     if ( g_BrivUserSettings[ "BuyGoldChestRatio" ] == "" )
         g_BrivUserSettings[ "BuyGoldChestRatio" ] := 1
     if ( g_BrivUserSettings[ "BuySilverChestRatio" ] == "" )
@@ -44,6 +42,12 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
         g_BrivUserSettings[ "MinSilverChestCount" ] := 0
     if ( g_BrivUserSettings[ "WaitToBuyChests" ] == "" )
         g_BrivUserSettings[ "WaitToBuyChests" ] := True
+    
+    ; New
+    if ( g_BrivUserSettings[ "FeatSwapEnabled" ] == "" )
+        g_BrivUserSettings[ "FeatSwapEnabled" ] := False
+    if ( g_UserSettings[ "RunHidden" ] == "" )
+        g_UserSettings[ "RunHidden" ] := 0  
 
     ; Advanced BrivGemFarm Settings
     if ( g_BrivUserSettings[ "HiddenFarmWindow" ] == "" )
@@ -62,8 +66,6 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
         g_BrivUserSettings[ "WindowXPosition" ] := 0
     if ( g_BrivUserSettings[ "WindowYPosition" ] == "" )
         g_BrivUserSettings[ "WindowYPosition" ] := 0
-    if ( g_BrivUserSettings[ "ManualBrivJumpValue" ] == "" )
-        g_BrivUserSettings[ "ManualBrivJumpValue" ] := 0
     if (g_BrivUserSettings[ "IgnoreBrivHaste" ] == "" )
         g_BrivUserSettings[ "IgnoreBrivHaste" ] := 0   
     if ( g_BrivUserSettings[ "PreferredBrivJumpZones" ] == "")
@@ -91,19 +93,19 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
         g_BrivUserSettings[ "OpenSilvers" ] := 1
     if ( g_BrivUserSettings[ "OpenGolds" ] == "" )
         g_BrivUserSettings[ "OpenGolds" ] := 1
+    ; =========================================
     ; Found legacy settings file.
     if ( !writeSettings AND loadFromFile AND userSettings[ "LastSettingsUsed" ] == "" )
     {
         userSettings[ "LastSettingsUsed" ] := "LegacySettings"
         g_SF.WriteObjectToJSON( A_LineFile . "\..\Profiles\LegacySettings_Settings.json" , userSettings )
     }
-    ; =========================================
-
     ; strip unused settings from the settings file.
-    for k,v in g_BrivUserSettings
-        g_BrivUserSettings[k] := userSettings[k] != "" ? userSettings[k] : g_BrivUserSettings[k] ; keep new setting if old is not found
-
-
+    cleanedSettings := g_SF.DeleteExtraSettings(userSettings, g_BrivUserSettings)
+    if(cleanedSettings != "")
+        g_BrivUserSettings := cleanedSettings
+    else
+        g_BrivUserSettings := userSettings
     if (writeSettings == True)
         g_SF.WriteObjectToJSON( A_LineFile . "\..\BrivGemFarmSettings.json" , g_BrivUserSettings )
 }

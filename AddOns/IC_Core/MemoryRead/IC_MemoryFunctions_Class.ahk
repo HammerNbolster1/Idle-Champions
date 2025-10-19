@@ -23,7 +23,6 @@ if (_ClassMemory.__Class != "_ClassMemory")
 
 class IC_MemoryFunctions_Class
 {
-    
     ;Memory Structures
     GameManager := ""
     GameSettings := ""
@@ -37,9 +36,10 @@ class IC_MemoryFunctions_Class
     ChestIndexByID := {} ; Map of ID/Chests for faster lookups
     ; HeroIDToNameMap := {} ; Map of champions IDs/Names
     HeroIDToIndexMap := {} ; Map of champion IDs/Index in hero handler
-    FormationFavorites := {}
+    FavoriteFormations := {}
     LastFormationSavesVersion := {}
-    FormationFavoriteSlots := {}
+    FormationsBySlot := {}
+    SlotFormations := {}
 
     __new(fileLoc := "CurrentPointers.json"){
         FileRead, oData, %fileLoc%
@@ -70,7 +70,7 @@ class IC_MemoryFunctions_Class
 
     ;Updates installed after the date of this script may result in the pointer addresses no longer being accurate.
     GetVersion(){
-        return "v2.5.6, 2025-09-12"
+        return "v2.5.9, 2025-10-10"
     }
 
     GetPointersVersion(){
@@ -84,6 +84,7 @@ class IC_MemoryFunctions_Class
     OpenProcessReader(){
         global g_UserSettings
         _MemoryManager.exeName := g_UserSettings[ "ExeName" ]
+        Critical, On
         isExeRead := _MemoryManager.Refresh()
         if(isExeRead == -1)
             return
@@ -98,6 +99,7 @@ class IC_MemoryFunctions_Class
         ; this.UserStatHandler.Refresh()
         ; this.UserData.Refresh()
         this.ActiveEffectKeyHandler.Refresh()
+        Critical, Off
     }
 
     ;=====================
@@ -249,8 +251,8 @@ class IC_MemoryFunctions_Class
                 continue
             champMap[A_Index] := name
         }
-        this.HeroIDToNameMap := champMap
-        return champMap
+        this.HeroIDToNameMap := champMap.Clone()
+        return champMap.Clone()
     }
 
     GetChampIDToIndexMap(){
@@ -263,8 +265,8 @@ class IC_MemoryFunctions_Class
             heroID := this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[A_Index - 1].def.id.Read()
             champMap[heroID] := A_Index - 1
         }
-        this.HeroIDToIndexMap := champMap
-        return champMap
+        this.HeroIDToIndexMap := champMap.Clone()
+        return champMap.Clone()
     }
 
     ReadChampHealthByID(ChampID := 0 ){
@@ -439,7 +441,7 @@ class IC_MemoryFunctions_Class
         familiarList := {}
         Loop, %size%
             familiarList.Push(this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[slot].Familiars["Clicks"].List[A_Index - 1].Read())
-        return familiarList
+        return familiarList.Clone()
     }
 
     GetFormationFamiliarsByFavorite(favorite := 1){
@@ -497,20 +499,26 @@ class IC_MemoryFunctions_Class
     }
 
     GetActiveModronFormationSaveSlot(){
-        formation := "M" ; (M)odron
+        favorite := "M" ; (M)odron
+        version := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2.__version.Read()
+        if(this.FavoriteFormations[favorite] != "" AND version == this.LastFormationSavesVersion[favorite])
+            return this.FavoriteFormations[favorite]
         ; Find the Campaign ID (e.g. 1 is Sword Cost, 2 is Tomb, 1400001 is Sword Coast with Zariel Patron, etc. )
         ; Find the SaveID associated to the Campaign ID 
-        ; Find the  index (slot) of the formation with the correct SaveID
+        ; Find the index (slot) of the formation with the correct SaveID
         formationSaveID := this.GetModronFormationsSaveIDByFormationCampaignID(this.ReadFormationCampaignID())
         formationSavesSize := this.ReadFormationSavesSize()
         if(formationSavesSize <= 0 OR formationSavesSize > 500) ; sanity check, should be < 51 saves per map.
             return ""
-        version := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2.__version.Read()
-        if(formationSaveID > 0 AND this.FormationFavoriteSlots[formationSaveID] != "" AND version == this.LastFormationSavesVersion[formation])
-            return this.FormationFavoriteSlots[formationSaveID]
-        formationSaveSlot := this.BinarySearchList(this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2, ["SaveID"], 1, formationSavesSize, formationSaveID)
-        this.FormationFavoriteSlots[formationSaveID] := formationSaveSlot
-        this.LastFormationSavesVersion[formation] := version
+        formationSaveSlot := -1
+        loop, %formationSavesSize%
+        {
+            if (this.ReadFormationSaveIDBySlot(A_Index - 1) == formationSaveID)
+            {
+                formationSaveSlot := A_Index - 1
+                Break
+            }
+        }
         return formationSaveSlot
     }
 
@@ -568,7 +576,7 @@ class IC_MemoryFunctions_Class
     ; Expecting modronSave from this location: this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ModronHandler.modronSaves[x]
     ; The int value for x is also acceptable.
     ReadModronGridArray(modronSave){
-        if (modronSave is number)
+        if modronSave is number
             modronSave := this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ModronHandler.modronSaves[modronSave]
         gridSave := modronSave.GridSave.QuickClone()
         gridHeight := gridSave.size.Read()
@@ -631,6 +639,10 @@ class IC_MemoryFunctions_Class
         return handlerState == 0 AND stopReason != "" ; handlerstate is "inactive" and stopReason is not null
     }
 
+    ReadResetsTotal(){
+        return this.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.StatHandler.Resets.Read()
+    }
+
     ReadResetsCount(){
         return this.GameManager.game.gameInstances[this.GameInstance].ResetsSinceLastManual.Read()
     }
@@ -664,10 +676,13 @@ class IC_MemoryFunctions_Class
     ; Retrieving Formations
     ;======================
     ; Read the champions saved in a given formation save slot. returns an array of champ ID with -1 representing an empty formation slot. When parameter ignoreEmptySlots is set to 1 or greater, empty slots (memory read value == -1) will not be added to the array. 
-    GetFormationSaveBySlot(slot := 0, ignoreEmptySlots := 0 ){
-        Formation := Array()
+    GetFormationSaveBySlot(slot := 0, ignoreEmptySlots := 0){
+        currentVersion := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[slot].Formation.__version.Read()
+        if(currentVersion != "" AND currentVersion == this.LastFormationSavesVersion["slot" . slot] AND this.SlotFormations["slot" . slot] != "")
+            return this.SlotFormations["slot" . slot].Clone()
+        Formation := {}
         _size := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[slot].Formation.size.Read()
-        if(_size <= 0 OR _size > 500) ; sanity check, should be less than 51 as of 2023-09-03
+        if(_size <= 0 OR _size > 20) ; sanity check
             return ""
         loop, %_size%
         {
@@ -675,7 +690,9 @@ class IC_MemoryFunctions_Class
             if (!ignoreEmptySlots or champID != -1)
                 Formation.Push( champID )
         }
-        return Formation
+        this.LastFormationSavesVersion["slot" . slot] := currentVersion
+        this.SlotFormations["slot" . slot] := Formation.Clone()
+        return Formation.Clone()
     }
 
     ; Looks for a saved formation matching a favorite. Returns "" on failure. Favorite, 0 = not a favorite, 1 = save slot 1 (Q), 2 = save slot 2 (W), 3 = save slot 3 (E). O(n) for potentially large list, try to limit use.
@@ -713,11 +730,12 @@ class IC_MemoryFunctions_Class
     ;Returns the formation stored at the favorite value passed in.
     GetFormationByFavorite( favorite := 0 ){
         version := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2.__version.Read()
-        if (this.FormationFavorites[favorite] != "" AND  favorite == this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[this.FormationFavorites[favorite]].Favorite.Read())
-            return this.GetFormationSaveBySlot(this.FormationFavoriteSlots[favorite]) 
+        if(this.FavoriteFormations[favorite] != "" AND version == this.LastFormationSavesVersion[favorite])
+            return this.FavoriteFormations[favorite]
         slot := this.GetSavedFormationSlotByFavorite(favorite)
         formation := this.GetFormationSaveBySlot(slot)
-        this.FormationFavoriteSlots[favorite] := slot
+        this.FavoriteFormations[favorite] := formation.Clone()
+        this.LastFormationSavesVersion[favorite] := version
         return formation
     }
 
@@ -737,7 +755,7 @@ class IC_MemoryFunctions_Class
 
     ReadBoughtLastUpgradeBySeat( seat := 1){
         upgradesGroup := this.GameManager.game.gameInstances[this.GameInstance].Screen.uiController.bottomBar.heroPanel.activeBoxes[seat - 1].hero.upgradeHandler.upgradeGroupsByLevel
-        upgradesGroup := this.GameManager.game.gameInstances[thiss.GameInstance].Screen.uiController.bottomBar.heroPanel.activeBoxes[seat - 1].hero.upgradeHandler.upgradeGroupsByLevel.Count.Read()
+        upgradesGroup := this.GameManager.game.gameInstances[this.GameInstance].Screen.uiController.bottomBar.heroPanel.activeBoxes[seat - 1].hero.upgradeHandler.upgradeGroupsByLevel.Count.Read()
          ; TODO: Dig into why this hashset's .size calc isn't correct and needs these offsets instead. Is it something to do with extending hashset instead of being hashset?
         upgradesGroup.FullOffsets.Push(0x20, 0x30)
         upgradeGroupsSize := upgradesGroup.Read()
@@ -745,6 +763,16 @@ class IC_MemoryFunctions_Class
         if (purchasedSize > 0 AND upgradeGroupsSize > 0)
             return (purchasedSize + 1 >= upgradeGroupsSize) AND (upgradeGroupsSize - purchasedSize < 3) ;(so far has only been 1 below or = )
         return True ; assume true to prevent upgrade spam on bad reads.
+    }
+
+    ReadLevelUpCostBySeat(seat := 1){ ; seats are ordered 1->12 in indexes 0-11
+        return this.GameManager.game.gameInstances[this.GameInstance].Screen.uiController.bottomBar.heroPanel.heroBoxsBySeat["value",seat-1,True].levelUpButtonDisplay.lastCostText.Read()
+    }
+
+    ReadLevelUpAmount()
+    {
+        value := this.GameManager.game.gameInstances[this.GameInstance].Screen.uiController.bottomBar.levelUpAmount.Read()
+        return value == "" ? 100 : value
     }
 
     ;=========================
@@ -757,7 +785,7 @@ class IC_MemoryFunctions_Class
     }
 
     ReadHeroUpgradeRequiredLevelByIndex(champID := 1, upgradeIndex := 7){
-        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[this.GetHeroHandlerIndexByChampID(ChampID)].upgradeHandler.upgradesByUpgradeId["key", upgradeIndex].RequiredLevel.Read()
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[this.GetHeroHandlerIndexByChampID(ChampID)].upgradeHandler.upgradesByUpgradeId["value", upgradeIndex].RequiredLevel.Read()
     }
 
     ; Checks for specialization graphic. No graphic means no spec.
@@ -874,18 +902,13 @@ class IC_MemoryFunctions_Class
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.BuffHandler.InventoryBuffs.size.Read()
     }
 
-    ; Depricated - Use ReadChestCountByID.
-    GetChestCountByID(chestID){
-        return this.ReadchestCountByID(chestID)
-    }
-
     ; Chests are stored in a dictionary under the "entries". It functions like a 32-Bit list but the ID is every 4th value. Item[0] = ID, item[1] = MAX, Item[2] = ID, Item[3] = count. They are each 4 bytes, not a pointer.
     ReadChestCountByID(chestID){
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ChestHandler.chestCounts[chestID].Read()
     }
 
     ReadInventoryChestIDBySlot(slot){
-        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ChestHandler.chestCounts["key", slot, quickLookup := True].Read()
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ChestHandler.chestCounts["key", slot].Read()
     }
 
     ReadInventoryChestCountBySlot(slot){
@@ -901,17 +924,17 @@ class IC_MemoryFunctions_Class
         ; maxContiguousChestID := 283 ; (ordered and continuous)
         ; maxOrderedChestID := 419 ; then 482 comes before 420
         static preBuild := True
-        if(preBuild AND this.CrusadersGameDataSet.ChestTypeDefines[this.ChestIndexByID[chestID]].ID.Read() != chestID)
+        if(preBuild AND this.CrusadersGameDataSet.ChestTypeDefines["value", this.ChestIndexByID[chestID]].ID.Read() != chestID)
             this.BuildChestIndexList()
-        return this.CrusadersGameDataSet.ChestTypeDefines[this.ChestIndexByID[chestID]].NamePlural.Read()
+        return this.CrusadersGameDataSet.ChestTypeDefines["value", this.ChestIndexByID[chestID]].NamePlural.Read()
     }
 
     GetChestNameBySlot(index){ 
-        return this.CrusadersGameDataSet.ChestTypeDefines[index - 1].Name.Read()
+        return this.CrusadersGameDataSet.ChestTypeDefines["value", index - 1].Name.Read()
     }
 
     GetChestIDBySlot(index){
-        return this.CrusadersGameDataSet.ChestTypeDefines[index - 1].ID.Read()
+        return this.CrusadersGameDataSet.ChestTypeDefines["value", index - 1].ID.Read()
     }
 
     ReadChestDefinesSize(){
@@ -978,6 +1001,50 @@ class IC_MemoryFunctions_Class
         return ""
     }
 
+    ReadBlessingCurrencyNameBySlot(slot := 1)
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ResetCurrencyHandler.ResetCurrencyDefs[slot].Name.Read()
+    }
+
+    ReadBlessingCurrencyShortNameBySlot(slot := 1)
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ResetCurrencyHandler.ResetCurrencyDefs[slot].ShortName.Read()
+    }
+
+    ReadBlessingCurrencyEarned(slot := 1)
+    {
+        SetFormat, FloatFast, 3.2e ; avoids 255 character limit for large doubles which effectively makes max double e254.
+        var := this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ResetCurrencyHandler.ResetCurrencyDefs[slot].AmountEarned.Read()
+        SetFormat, FloatFast, 0.6
+        return var
+    }
+
+    GetFavorFor(name := "Corellon")
+    {
+        if (name == 1) ; test for fullmemreads 
+            name := "Corellon"
+        ; first def is garbage data so we skip it.
+        size := this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ResetCurrencyHandler.ResetCurrencyDefs.size.Read() - 1
+        if (size < 1 or size > 100)
+            return ""
+        loop, %size%
+        {
+            val := this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ResetCurrencyHandler.ResetCurrencyDefs[A_Index].ShortName.Read()
+            if (val == name)
+                return this.ReadBlessingCurrencyEarned(A_Index)
+        }
+        return ""
+    }
+
+    GetFavorExponentFor(name := "Corellon")
+    {
+        if (name == 1)
+            name := "Corellon"
+        var := this.GetFavorFor(name)
+        var := SubStr(var, 7)
+        return var
+    }
+
     GetBlessingsCurrency(){
         return this.ReadConversionCurrencyBySlot(this.GetBlessingsDialogSlot())
     }
@@ -988,6 +1055,9 @@ class IC_MemoryFunctions_Class
     }
 
     ReadPatronID(){
+        patronIDDef := this.GameManager.game.gameInstances[this.GameInstance].PatronHandler.ActivePatron_k__BackingField.Read()
+        if (patronIDDef == 0 OR patronIDDef == "")
+            return patronIDDef
         patronID := this.GameManager.game.gameInstances[this.GameInstance].PatronHandler.ActivePatron_k__BackingField.ID.Read()
         if(patronID < 0 OR patronID > 100) ; Ignore clearly bad memory reads.
             patronID := ""
@@ -996,6 +1066,24 @@ class IC_MemoryFunctions_Class
 
     ReadDialogActiveBySlot(slot := 0){
         return this.DialogManager.dialogs[slot].Active.Read()
+    }
+
+    ;==============
+    ;Shop Methods
+    ;==============
+    ReadALaCartRerollCost()
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ShopHandler.ALaCarteHandler_k__BackingField.RerollCost_k__BackingField.Read()
+    }
+
+    ReadALaCarteRerollsRemaining()
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ShopHandler.ALaCarteHandler_k__BackingField.RerollsRemaining_k__BackingField.Read()
+    }
+
+    ReadALaCarteOffersExpireTime()
+    {
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.ShopHandler.ALaCarteHandler_k__BackingField.OffersTimeRemaining_k__BackingField.expireTimeMS.Read()
     }
 
     ;==============
@@ -1038,7 +1126,7 @@ class IC_MemoryFunctions_Class
         if(size <= 0 OR size > 2000) ; Sanity checks
             return "" 
         loop, %size%
-            this.ChestIndexByID[this.CrusadersGameDataSet.ChestTypeDefines[A_Index - 1].ID.Read()] := A_Index - 1
+            this.ChestIndexByID[this.CrusadersGameDataSet.ChestTypeDefines["value",A_Index - 1,True].ID.Read()] := A_Index - 1
     }
 
     ; Creates GameObjectSTructure indexes of all chests in chest defines.
@@ -1056,7 +1144,7 @@ class IC_MemoryFunctions_Class
         return !_MemoryManager.is64Bit ? ( (g_ImportsGameVersion32 == "" ? " ---- " : (g_ImportsGameVersion32 . g_ImportsGameVersionPostFix32 )) . " (32 bit), " ) : ( (g_ImportsGameVersion64 == "" ? " ---- " : (g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64)) . " (64 bit)")
     }
     
-    HeroHasFeatSavedInFormation(heroID :=58, featID := 2131, formationSlot := 0){
+    HeroHasFeatSavedInFormation(heroID :=58, featID := 2131, formationSlot := 1){
         size := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[formationSlot].Feats[heroID].List.size.Read()
         if(size == "")
             return ""
@@ -1068,7 +1156,7 @@ class IC_MemoryFunctions_Class
         return false
     }
     
-    HeroHasAnyFeatsSavedInFormation(heroID := 58, formationSlot := 0){
+    HeroHasAnyFeatsSavedInFormation(heroID := 58, formationSlot := 1){
         ; heroID :=58
         size := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2[formationSlot].Feats[heroID].List.size.Read()
         if(size == "")
@@ -1089,6 +1177,11 @@ class IC_MemoryFunctions_Class
         Loop, %size%
             featList.Push(this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.FeatHandler.heroFeatSlots[heroID].List[A_Index - 1].ID.Read())
         return featList
+    }
+
+    ReadStacksToNext()
+    {
+        return g_SF.CalculateBrivStacksToReachNextModronResetZone()
     }
 
     #include *i %A_LineFile%\..\IC_MemoryFunctions_Extended.ahk

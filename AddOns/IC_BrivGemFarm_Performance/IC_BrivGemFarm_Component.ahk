@@ -1,10 +1,17 @@
-﻿;Load user settings
+﻿#include %A_LineFile%\..\IC_BrivGemFarm_Addon.ahk
+;Load user settings
 global g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\BrivGemFarmSettings.json" )
 global g_BrivFarm := new IC_BrivGemFarm_Class
 g_BrivFarm.GemFarmGUID := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
 global g_BrivFarmModLoc := A_LineFile . "\..\IC_BrivGemFarm_Mods.ahk"
+global g_BrivFarmServerCallModLoc := A_LineFile . "\..\IC_BrivGemFarm_Extra_ServerCall_Mods.ahk"
 global g_BrivFarmAddonStartFunctions := {}
 global g_BrivFarmAddonStopFunctions := {}
+global g_BrivFarmComsObj := new IC_BrivGemFarm_Coms
+g_globalTempSettingsFiles.Push(A_LineFile . "\..\LastGUID_BrivGemFarmComponent.json")
+g_globalTempSettingsFiles.Push(A_LineFile . "\..\ServerCallLocationOverride_Settings.json") ; may break a server call on exit before normal function
+g_globalTempSettingsFiles.Push(A_LineFile . "\..\ServerCall_Settings.json")
+
 global g_BrivFarmLastRunMiniscripts := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_Miniscripts.json")
 GUIFunctions.AddTab("Briv Gem Farm")
 Gui, ICScriptHub:Tab, Briv Gem Farm
@@ -15,15 +22,14 @@ Gui, ICScriptHub:Add, Button, x+10 gBriv_Save_Profile_Clicked, Save Profile
 Gui, ICScriptHub:Add, Button, x+10 gBriv_Delete_Profile_Clicked, Delete Profile
 
 Gui, ICScriptHub:Add, Text, x15 y+10 w120, User Settings:
-#include %A_LineFile%\..\IC_BrivGemFarm_Settings.ahk
 FileCreateDir, % A_LineFile . "\..\Profiles"
 ReloadBrivGemFarmSettings(True)
 Gui, ICScriptHub:Add, Checkbox, vFkeysCheck x15 y+5, Level Champions with Fkeys?
 Gui, ICScriptHub:Add, Checkbox, vStackFailRecoveryCheck x15 y+5, Enable manual resets to recover from failed Briv stacking?
 Gui, ICScriptHub:Add, Checkbox, vDisableDashWaitCheck x15 y+5, Disable Dash Wait?
 GUIFunctions.UseThemeTextColor("InputBoxTextColor")
-Gui, ICScriptHub:Add, Edit, vNewStackZone x15 y+5 w50, % g_BrivUserSettings[ "StackZone" ]
-Gui, ICScriptHub:Add, Edit, vNewMinStackZone x15 y+10 w50, % g_BrivUserSettings[ "MinStackZone" ]
+Gui, ICScriptHub:Add, Edit, vNewMinStackZone x15 y+5 w50, % g_BrivUserSettings[ "MinStackZone" ]
+Gui, ICScriptHub:Add, Edit, vNewStackZone x15 y+10 w50, % g_BrivUserSettings[ "StackZone" ]
 Gui, ICScriptHub:Add, Edit, vNewRestartStackTime x15 y+10 w50, % g_BrivUserSettings[ "RestartStackTime" ]
 GUIFunctions.UseThemeTextColor("DefaultTextColor")
 Gui, ICScriptHub:Add, GroupBox, Section w400 h50 vBrivGemFarmTargetHasteGroupBox, Target haste stacks for next run
@@ -46,7 +52,6 @@ Gui, ICScriptHub:Add, Text, x+1 gBriv_Visit_Byteglow_Speed_Link, % ")"
 GuiControlGet, xyVal, ICScriptHub:Pos, BrivGemFarmTargetHasteGroupBox
 xyValX += 0
 xyValY += 55
-
 
 GUIFunctions.UseThemeTextColor("DefaultTextColor")
 Gui, ICScriptHub:Add, GroupBox, Section w400 h205 x%xyValX% y%xyValY% vBrivGemFarmChestBuyGroupBox, Options for buying and opening chests during offline stacking.
@@ -85,18 +90,18 @@ Gui, ICScriptHub:Add, Edit, x+5 yp-5 w50 vMinimumSilverChestCount, % g_BrivUserS
 
 Gui,  ICScriptHub:Add, Text, x26 y+5 w370 h1 0x10 
 GUIFunctions.UseThemeTextColor("DefaultTextColor")
-Gui, ICScriptHub:Add, Checkbox, vBuyAllChestsCheck x26 y+10, Only buy/open max chests (250 buy/1000 open)
+Gui, ICScriptHub:Add, Checkbox, vBuyAllChestsCheck gBriv_MaxChests_Check_Clicked x26 y+10, Only buy/open max chests (250 buy/1000 open)
 GUIFunctions.UseThemeTextColor("InputBoxTextColor")
 Gui, ICScriptHub:Add, Edit, vNewMinGemCount x25 y+10 w100, % g_BrivUserSettings[ "MinGemCount" ]
 ; ------- ------------------- --------------
 
 
 GUIFunctions.UseThemeTextColor("DefaultTextColor")
-GuiControlGet, xyVal, ICScriptHub:Pos, NewStackZone
+GuiControlGet, xyVal, ICScriptHub:Pos, NewMinStackZone
 xyValX += 55
 xyValY += 5
-Gui, ICScriptHub:Add, Text, x%xyValX% y%xyValY%+10, Farm SB stacks AFTER this zone
-Gui, ICScriptHub:Add, Text, x%xyValX% y+18, Minimum zone Briv can farm SB stacks on
+Gui, ICScriptHub:Add, Text, x%xyValX% y%xyValY%+10, Minimum stack zone (the first area Briv (W) cannot kill.)
+Gui, ICScriptHub:Add, Text, x%xyValX% y+18, Farm Steelbones stacks AFTER this zone (typically 2 jumps before modron reset)
 GuiControlGet, xyVal, ICScriptHub:Pos, NewRestartStackTime
 xyValX += 55
 xyValY += 5
@@ -114,6 +119,25 @@ IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked(g_BrivUserSettings["LastSetti
 IC_BrivGemFarm_Component.UpdateGUICheckBoxes()
 IC_BrivGemFarm_Component.BuildToolTips()
 IC_BrivGemFarm_Component.ResetModFile()
+IC_BrivGemFarm_Component.StartComs()
+
+Briv_MaxChests_Check_Clicked()
+{
+    global BuyAllChestsCheck
+    Gui, ICScriptHub:Submit, NoHide
+    if(BuyAllChestsCheck)
+    {
+        GuiControl, ICScriptHub:Enable, BuySilverChestRatioSlider
+        GuiControl, ICScriptHub:Enable, BuyGoldChestRatioSlider
+    }
+    else
+    {
+        GuiControl, ICScriptHub:Disable, BuySilverChestRatioSlider
+        GuiControl, ICScriptHub:Disable, BuyGoldChestRatioSlider
+    }
+    Gui, ICScriptHub:Submit, NoHide
+}
+
 Briv_Run_Clicked() {
     IC_BrivGemFarm_Component.Briv_Run_Clicked()
 }
@@ -250,7 +274,7 @@ class IC_BrivGemFarm_Component
         WinActivate, ahk_id %sliderID% 
         GuiControlGet, sliderID, ICScriptHub:Hwnd, BuySilverChestRatioSlider
         WinActivate, ahk_id %sliderID% 
-        ; Select an Edit box so left/right arrow keys do not change profiles
+        ; Select an Edit box so left/right arrow keys do not change profiles in dropdown list
         WinGet wID, ID, A 
         ControlFocus, NewStackZone, ahk_id %wID%
     }
@@ -266,19 +290,20 @@ class IC_BrivGemFarm_Component
                 Run, %A_AhkPath% "%v%" "%k%"
             }
         }
-        try
+        try ; Connect to current running if it exists
         {
             Briv_Connect_Clicked()
             SharedData := ComObjActive(g_BrivFarm.GemFarmGUID)
             SharedData.ShowGui()
         }
-        catch
+        catch ; otherwise start farm
         {
             ;g_BrivGemFarm.GemFarm()
             g_SF.Hwnd := WinExist("ahk_exe " . g_userSettings[ "ExeName"])
             g_SF.Memory.OpenProcessReader()
             scriptLocation := A_LineFile . "\..\IC_BrivGemFarm_Run.ahk"
             GuiControl, ICScriptHub:Choose, ModronTabControl, Stats
+            g_SF.ResetServerCall()
             for k,v in g_BrivFarmAddonStartFunctions
             {
                 v.Call()
@@ -286,6 +311,7 @@ class IC_BrivGemFarm_Component
             GuidCreate := ComObjCreate("Scriptlet.TypeLib")
             g_BrivFarm.GemFarmGUID := guid := GuidCreate.Guid
             Run, %A_AhkPath% "%scriptLocation%" "%guid%"
+            IC_BrivGemFarm_Component.StartComs()
         }
         this.TestGameVersion()
     }
@@ -332,6 +358,7 @@ class IC_BrivGemFarm_Component
                 SharedRunData.Close()
             }
         }
+        g_BrivFarmComsObj.StopAll()
         this.UpdateStatus("Closing Gem Farm")
         try
         {
@@ -352,21 +379,24 @@ class IC_BrivGemFarm_Component
     {   
         this.UpdateStatus("Connecting to Gem Farm...") 
         this.UpdateGUIDFromLast()
+        g_SF.ResetServerCall()
         Try 
         {
-            ComObjActive(g_BrivFarm.GemFarmGUID)
+            SharedRunData := ComObjActive(g_BrivFarm.GemFarmGUID)
         }
         Catch
         {
             this.UpdateStatus("Gem Farm not running.") 
             return
         }
+        try
+        {
+            IC_BrivGemFarm_Component.StartComs()
+        }
         g_SF.Hwnd := WinExist("ahk_exe " . g_userSettings[ "ExeName"])
         g_SF.Memory.OpenProcessReader()
         for k,v in g_BrivFarmAddonStartFunctions
-        {
             v.Call()
-        }
         GuiControl, ICScriptHub:Choose, ModronTabControl, Stats
     }
 
@@ -527,14 +557,30 @@ class IC_BrivGemFarm_Component
         IfExist, %g_BrivFarmModLoc%
             FileDelete, %g_BrivFarmModLoc%
         FileAppend, `;THIS FILE IS AUTOMATICALLY GENERATED BY BRIV GEM FARM PERFORMANCE ADDON`n, %g_BrivFarmModLoc%
+        IfExist, %g_BrivFarmServerCallModLoc%
+            FileDelete, %g_BrivFarmServerCallModLoc%
+        FileAppend, `;THIS FILE IS AUTOMATICALLY GENERATED BY BRIV GEM FARM PERFORMANCE ADDON`n, %g_BrivFarmServerCallModLoc%
     }
 
     UpdateStatus(msg)
     {
-        GuiControl, ICScriptHub:, gBriv_Button_Status, % msg
-        SetTimer, ClearBrivGemFarmStatusMessage,-3000
+        global gBriv_Button_Status
+        GUIFunctions.UpdateStatusTextWithClear(gBriv_Button_Status, msg, 3000)
     }
 
+    StartComs()
+    {
+        GuidCreate := ComObjCreate("Scriptlet.TypeLib")
+        guid := GuidCreate.Guid
+        ObjRegisterActive(g_BrivFarmComsObj, "")
+        ObjRegisterActive(g_BrivFarmComsObj, guid)
+        g_SF.WriteObjectToJSON(A_LineFile . "\..\LastGUID_BrivGemFarmComponent.json", guid)
+        Try
+        {
+            SharedData := ComObjActive(g_BrivFarm.GemFarmGUID)
+            SharedData.ResetComs()
+        }
+    }
     
     Briv_Visit_Byteglow_Speed(speedType := "avg")
     {
@@ -602,5 +648,14 @@ class IC_BrivGemFarm_Component
     }
 }
 
+; Revoke coms on exit.
+OnExit("Briv_Com_Object_Revoke")
+; OnExit(Briv_Com_Object_Revoke())
+Briv_Com_Object_Revoke()
+{
+    ObjRegisterActive(g_BrivFarmComsObj, "")
+}
+
 Gui, ICScriptHub:Submit, NoHide
-#include %A_LineFile%\..\IC_BrivGemFarm_Functions.ahk
+Briv_MaxChests_Check_Clicked()
+#include %A_LineFile%\..\IC_BrivGemFarm_ClassUpdates.ahk
