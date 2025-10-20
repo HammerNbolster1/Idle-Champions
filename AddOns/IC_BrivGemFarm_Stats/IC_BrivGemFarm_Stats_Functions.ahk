@@ -287,7 +287,9 @@ class IC_BrivGemFarm_Stats_Component
         if (sbStacks == "")
         {
             if (SubStr(sbStackMessage, StrLen(sbStackMessage), 1) != "]")
-                sbStackMessage := sbStackMessage . " [last]"
+			{
+                ;sbStackMessage := sbStackMessage . " [last]"
+			}
         }
         else
         {
@@ -298,7 +300,9 @@ class IC_BrivGemFarm_Stats_Component
         if (hasteStacks == "")
         {
             if (SubStr(hasteStackMessage, StrLen(hasteStackMessage), 1) != "]")
-                hasteStackMessage := hasteStackMessage . " [last]"
+			{
+                ;hasteStackMessage := hasteStackMessage . " [last]"
+			}
         }
         else
             hasteStackMessage := hasteStacks
@@ -357,7 +361,7 @@ class IC_BrivGemFarm_Stats_Component
                 this.TotalFarmTime := (A_TickCount - this.ScriptStartTime)
             this.TotalFarmTimeHrs := this.TotalFarmTime / 3600000
             if(this.TotalRunCount > 0)
-                this.BossesPerHour := Round( ((xpGain := this.DoXPChecks()) / 5) / this.TotalFarmTimeHrs, 3) ; unmodified levels completed / 5 = boss levels completed
+                this.BossesPerHour := Round( ((xpGain := this.DoXPChecks()) / 5) / this.TotalFarmTimeHrs, 2) ; unmodified levels completed / 5 = boss levels completed
             if (IsObject(this.SharedRunData))
             { ; (Opened / Bought / Dropped)
                 global ShiniesClassNN
@@ -408,7 +412,7 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, AvgRunTimeID, % this.FormatMsec(this.TotalFarmTime / this.TotalRunCount)
         GuiControl, ICScriptHub:, dtTotalTimeID, % this.FormatMsec(this.TotalFarmTime)
         GuiControl, ICScriptHub:, bossesPhrID, % this.DecideScientific(this.BossesPerHour)
-        GuiControl, ICScriptHub:, GemsPhrID, % this.DecideScientific(Round( this.GemsTotal / this.TotalFarmTimeHrs, 3 ))
+        GuiControl, ICScriptHub:, GemsPhrID, % this.DecideScientific(Round( this.GemsTotal / this.TotalFarmTimeHrs, 2 ))
     }
 
     StoreStartingValues()
@@ -739,13 +743,13 @@ class IC_BrivGemFarm_Stats_Component
     {
         local form
         if (ms < 60000)
-            form := this.CompactTimestamps ? "ss'.'fff" : "s's 'fff'ms"
+            form := this.CompactTimestamps ? "ss'.'ff" : "s's 'ff'ms"
         else if (ms < 3600000)
-            form := this.CompactTimestamps ? "mm':'ss'.'fff" : "m'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "mm':'ss'.'ff" : "m'm 'ss's 'ff'ms"
         else if (ms < 86400000)
-            form := this.CompactTimestamps ? "h':'mm':'ss'.'fff" : "h'h 'mm'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "h':'mm':'ss'.'ff" : "h'h 'mm'm 'ss's 'ff'ms"
         else
-            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'fff" : "d'd 'h'h 'mm'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'ff" : "d'd 'h'h 'mm'm 'ss's 'ff'ms"
         VarSetCapacity(t,256),DllCall("GetDurationFormat","uint",2048,"uint",0,"ptr",0,"int64",ms*10000,"wstr",form,"wstr",t,"int",256)
         return t
     }
