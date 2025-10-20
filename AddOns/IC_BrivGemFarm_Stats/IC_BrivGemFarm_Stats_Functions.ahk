@@ -123,23 +123,23 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Font, w700
         Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h330 vOnceRunGroupID, Updated Once Per Full Run:
         Gui, ICScriptHub:Font, w400
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, Previous Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, Previous Run Time (s):
         Gui, ICScriptHub:Add, Text, vPrevRunTimeID x+2 w50,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Fastest Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Fastest Run Time (s):
         Gui, ICScriptHub:Add, Text, vFastRunTimeID x+2 w50,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Slowest Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Slowest Run Time (s):
         Gui, ICScriptHub:Add, Text, vSlowRunTimeID x+2 w50,
 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10, Total Run `Count:
         Gui, ICScriptHub:Add, Text, vTotalRunCountID x+2 w50,
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Total Run Time (hr):
         Gui, ICScriptHub:Add, Text, vdtTotalTimeID x+2 w50,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Avg. Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Avg. Run Time (s):
         Gui, ICScriptHub:Add, Text, vAvgRunTimeID x+2 w50,
 
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Fail Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10, Fail Run Time (s):
         Gui, ICScriptHub:Add, Text, vFailRunTimeID x+2 w50,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Fail Run Time Total (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Fail Run Time Total (s):
         Gui, ICScriptHub:Add, Text, vTotalFailRunTimeID x+2 w50,
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Failed Stacking Tally by Type:
         Gui, ICScriptHub:Add, Text, vFailedStackingID x+2 w120,
@@ -281,7 +281,7 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, g_StackCountSBID, % sbStackMessage
         GuiControl, ICScriptHub:, g_StackCountHID, % hasteStackMessage
 
-        dtCurrentRunTime := Round( ( A_TickCount - previousLoopStartTime ) / 60000, 2 )
+        dtCurrentRunTime := Round( ( A_TickCount - previousLoopStartTime ) / 1000, 2 )
         GuiControl, ICScriptHub:, dtCurrentRunTimeID, % dtCurrentRunTime
 
         dtCurrentLevelTime := (lastZone == ": " ? "" : "[" . lastZone . "]: ") . Round( ( A_TickCount - previousZoneStartTime ) / 1000, 2 )
@@ -328,7 +328,7 @@ class IC_BrivGemFarm_Stats_Component
                 InventoryViewRead.Call(this.TotalRunCount)
             }
             this.LastResetCount := resetsCount
-            this.PreviousRunTime := Round(this.SharedRunData.LastRunTime  / 60000, 2)
+            this.PreviousRunTime := Round(this.SharedRunData.LastRunTime  / 1000, 2)
             this.SbLastStacked := g_SF.Memory.ReadHasteStacks()
             GuiControl, ICScriptHub:, PrevRunTimeID, % this.PreviousRunTime
 
@@ -354,7 +354,7 @@ class IC_BrivGemFarm_Stats_Component
             else if (IsObject(this.SharedRunData))
                 dtTotalTime := (A_TickCount - this.SharedRunData.ScriptStartTime) / 3600000
             GuiControl, ICScriptHub:, dtTotalTimeID, % Round( dtTotalTime, 2 )
-            GuiControl, ICScriptHub:, AvgRunTimeID, % Round( ( dtTotalTime / this.TotalRunCount ) * 60, 2 )
+            GuiControl, ICScriptHub:, AvgRunTimeID, % Round( ( dtTotalTime / this.TotalRunCount ) * 3600, 2 )
 
             ; ====================
             ; XP checks          
@@ -363,7 +363,7 @@ class IC_BrivGemFarm_Stats_Component
                 this.BossesPerHour := Round( (xpGain / 5) / dtTotalTime, 2) ; unmodified levels completed / 5 = boss levels completed
             ; ====================
 
-            GuiControl, ICScriptHub:, bossesPhrID, % this.BossesPerHour
+            GuiControl, ICScriptHub:, bossesPhrID, % this.TS(this.BossesPerHour)
             currentSilverChests := g_SF.Memory.ReadChestCountByID(1) ; Start + Purchased + Dropped - Opened
             currentGoldChests := g_SF.Memory.ReadChestCountByID(2)
             if (IsObject(this.SharedRunData))
@@ -376,8 +376,8 @@ class IC_BrivGemFarm_Stats_Component
                 gemsSpent := this.SharedRunData.GemsSpent
             }
             this.GemsTotal := ( g_SF.Memory.ReadGems() - this.GemStart ) + gemsSpent
-            GuiControl, ICScriptHub:, GemsTotalID, % this.GemsTotal
-            GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / dtTotalTime, 2 )
+            GuiControl, ICScriptHub:, GemsTotalID, % this.TS(this.GemsTotal)
+            GuiControl, ICScriptHub:, GemsPhrID, % this.TS(Round( this.GemsTotal / dtTotalTime, 2 ))
             this.StackFail := 0
             this.SharedRunData.StackFail := false
             this.SharedRunData.TriggerStart := false
@@ -421,12 +421,12 @@ class IC_BrivGemFarm_Stats_Component
         currentNordomXP := ActiveEffectKeySharedFunctions.Nordom.NordomModronCoreToolboxHandler.ReadAwardedXPStat()
         currentCoreXP := g_SF.Memory.GetCoreXPByInstance(this.ActiveGameInstance)
         xpGain := currentCoreXP - this.CoreXPStart 
-        if(foundXPMod AND foundNordom AND currentCoreXP AND currentCoreXP)
+        if(foundXPMod AND foundNordom AND currentCoreXP )
             ; xpGain := ( xpGain / 1.1 ) + ( this.NordomXPStart - currentNordomXP ) ; Other possible calculation
             xpGain := ( xpGain + (this.NordomXPStart - currentNordomXP ) ) / 1.1
-        else if(foundNordom AND currentCoreXP AND currentCoreXP)
+        else if(foundNordom AND currentCoreXP)
             xpGain := xpGain + ( this.NordomXPStart - currentNordomXP )
-        else if (foundXPMod AND currentCoreXP AND currentCoreXP)
+        else if (foundXPMod AND currentCoreXP)
             xpGain := xpGain / 1.1
         else if(currentCoreXP)
             xpGain := currentCoreXP - this.CoreXPStart
@@ -530,7 +530,10 @@ class IC_BrivGemFarm_Stats_Component
         }
     }
 
-
+	TS(val)
+    {
+        return  g_SF.AddThousandsSeperator(val)
+    }
     ;==========================
     ; Stats GUI Reset Functions
     ;==========================
