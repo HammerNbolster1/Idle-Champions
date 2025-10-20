@@ -140,7 +140,7 @@ class IC_BrivGemFarm_Stats_Component
         
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25 w%labelWidth%, Total Run `Count:
         Gui, ICScriptHub:Add, Text, vTotalRunCountID x+2 w150,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth%, Total Run Time (hr):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth%, Total Run Time:
         Gui, ICScriptHub:Add, Text, vdtTotalTimeID x+2 w150,
 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w%labelWidth%, Previous Run Time:
