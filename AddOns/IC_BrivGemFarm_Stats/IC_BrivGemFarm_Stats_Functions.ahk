@@ -441,7 +441,7 @@ class IC_BrivGemFarm_Stats_Component
         preStrValue := foundMechanusBlessing ? "Mechanus" : ""
         preStrValue := (foundMechanusBlessing AND foundNordom) ? "Mechanus/Nordom" : ""
         preStrValue := foundNordom ? "Nordom" : ""
-        GuiControl, ICScriptHub:, NordomWarningID, % (foundMechanusBlessing OR foundNordom ? preStrValue . " found." : "")
+        ;GuiControl, ICScriptHub:, NordomWarningID, % (foundMechanusBlessing OR foundNordom ? preStrValue . " found." : "")
         currentNordomXP := ActiveEffectKeySharedFunctions.Nordom.NordomModronCoreToolboxHandler.ReadAwardedXPStat()
         currentCoreXP := g_SF.Memory.GetCoreXPByInstance(this.ActiveGameInstance)
         xpGain := currentCoreXP - this.CoreXPStart 
@@ -605,13 +605,13 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, FastRunTimeID, % this.FastRunTime
         GuiControl, ICScriptHub:, SlowRunTimeID, % this.SlowRunTime
         GuiControl, ICScriptHub:, FailRunTimeID, % this.PreviousRunTime
-        GuiControl, ICScriptHub:, TotalFailRunTimeID, % round( this.FailRunTime, 3 )
+        GuiControl, ICScriptHub:, TotalFailRunTimeID, % round( this.FailRunTime, 2 )
         GuiControl, ICScriptHub:, TotalRunCountID, % this.TotalRunCount
         GuiControl, ICScriptHub:, dtTotalTimeID, % 0
         GuiControl, ICScriptHub:, AvgRunTimeID, % 0
         GuiControl, ICScriptHub:, bossesPhrID, % this.BossesPerHour
         GuiControl, ICScriptHub:, GemsTotalID, % this.GemsTotal
-        GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / this.TotalFarmTime, 3 )
+        GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / this.TotalFarmTime, 2 )
         if(IsObject(this.SharedRunData))
         {
             GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
@@ -727,13 +727,13 @@ class IC_BrivGemFarm_Stats_Component
     {
         local form
         if (ms < 60000)
-            form := this.CompactTimestamps ? "ss'.'fff" : "s's 'fff'ms"
+            form := this.CompactTimestamps ? "ss'.'ff" : "s's 'ff'ms"
         else if (ms < 3600000)
-            form := this.CompactTimestamps ? "mm':'ss'.'fff" : "m'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "mm':'ss'.'ff" : "m'm 'ss's 'ff'ms"
         else if (ms < 86400000)
-            form := this.CompactTimestamps ? "h':'mm':'ss'.'fff" : "h'h 'mm'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "h':'mm':'ss'.'ff" : "h'h 'mm'm 'ss's 'ff'ms"
         else
-            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'fff" : "d'd 'h'h 'mm'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'ff" : "d'd 'h'h 'mm'm 'ss's 'ff'ms"
         VarSetCapacity(t,256),DllCall("GetDurationFormat","uint",2048,"uint",0,"ptr",0,"int64",ms*10000,"wstr",form,"wstr",t,"int",256)
         return t
     }
