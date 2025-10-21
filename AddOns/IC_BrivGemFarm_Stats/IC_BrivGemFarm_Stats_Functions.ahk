@@ -766,13 +766,13 @@ class IC_BrivGemFarm_Stats_Component
     {
         local form
         if (ms < 60000)
-            form := this.CompactTimestamps ? "ss'.'fff" : "s's 'fff'ms"
+            form := this.CompactTimestamps ? "ss'.'ff" : "s's 'ff'ms"
         else if (ms < 3600000)
-            form := this.CompactTimestamps ? "mm':'ss'.'fff" : "m'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "mm':'ss'.'ff" : "m'm 'ss's 'ff'ms"
         else if (ms < 86400000)
-            form := this.CompactTimestamps ? "h':'mm':'ss'.'fff" : "h'h 'mm'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "h':'mm':'ss'.'ff" : "h'h 'mm'm 'ss's 'ff'ms"
         else
-            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'fff" : "d'd 'h'h 'mm'm 'ss's 'fff'ms"
+            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'ff" : "d'd 'h'h 'mm'm 'ss's 'ff'ms"
         VarSetCapacity(t,256),DllCall("GetDurationFormat","uint",2048,"uint",0,"ptr",0,"int64",ms*10000,"wstr",form,"wstr",t,"int",256)
         return t
     }
