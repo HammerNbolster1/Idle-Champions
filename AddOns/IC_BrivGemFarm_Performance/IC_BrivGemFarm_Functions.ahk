@@ -137,7 +137,7 @@ class IC_BrivGemFarm_Class
 
     GemFarmDoZone(formationModron := "")
     {
-        if ((!Mod( g_SF.Memory.ReadCurrentZone(), 5 )) AND (!Mod( g_SF.Memory.ReadHighestZone(), 5)))
+        if (!(Mod( g_SF.Memory.ReadCurrentZone(), 5)) AND !(Mod( g_SF.Memory.ReadHighestZone(), 5)))
             this.GemFarmDoTouchedBoss()
         if (this.DoKeySpam AND g_BrivUserSettings[ "Fkeys" ] AND g_SF.AreChampionsUpgraded(formationModron)) 
         { ; leveling completed, remove champs from keyspam.
@@ -209,7 +209,7 @@ class IC_BrivGemFarm_Class
             return 0
         }
         ; stack briv between min zone and stack zone if briv is out of jumps (if stack fail recovery is on)
-        if (g_SF.Memory.ReadHasteStacks() < 50 AND stacks < targetStacks AND CurrentZone >= g_BrivUserSettings[ "MinStackZone" ] AND g_BrivUserSettings[ "StackFailRecovery" ] AND CurrentZone < g_BrivUserSettings[ "StackZone" ] )
+        if (g_SF.Memory.ReadHasteStacks() < 50 AND stacks < targetStacks AND CurrentZone >= g_BrivUserSettings[ "MinStackZone" ] AND g_BrivUserSettings[ "StackFailRecovery" ] AND CurrentZone <= g_BrivUserSettings[ "StackZone" ] )
         {
             ; only use current zone if there's been no/non-excess issues with it.
             if (!this.StackFailAreasThisRunTally[CurrentZone] AND (!this.StackFailAreasTally[CurrentZone] OR this.StackFailAreasTally[CurrentZone] < this.MaxStackRestartFails))
@@ -392,7 +392,7 @@ class IC_BrivGemFarm_Class
                 Sleep, 124
                 ElapsedTime := A_TickCount - StartTime
             }
-            g_SF.SafetyCheck()
+            g_SF.SafetyCheck(stackRestart := True)
             stacks := this.GetNumStacksFarmed()
             ;check if save reverted back to below stacking conditions
             if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings[ "MinStackZone" ])

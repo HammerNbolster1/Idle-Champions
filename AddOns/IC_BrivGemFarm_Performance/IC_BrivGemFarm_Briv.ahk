@@ -10,20 +10,25 @@ class BrivFunctions
     static UnnaturalHasteBaseEffect := 25
     static WastingHastePercentOverride := 800
     static StrategicStridePercentOverride := 25600
+    static ThunderStepPercentIncrease := 20
     static WastingHasteId := 791
     static StrategicStrideId := 2004
-    static AccurateAcrobaticsFeatId := 2062
+    static AccurateAcrobaticsId := 2062
+    static ThunderStepId := 2131
+    static UnnaturalHasteId := 3452
+    static MetalbornId := 3455
     static BrivSkipConfigByFavorite := []
 
     class BrivSkipConfig ; IC_BrivGemFarm_Class.BrivFunctions.BrivSkipConfig
     {
-        ; Cached properties
         SkipAmount := 0
         SkipChance := 0
         Feats := ""
+        ; Cached properties
         4JFeat := false
         9JFeat := false
         AAFeat := false
+        TSFeat := false
         AvailableJumps := ""
 
         __New(skipAmount, skipChance, feats)
@@ -37,8 +42,10 @@ class BrivFunctions
                     this.4JFeat := true
                 else if (v == IC_BrivGemFarm_BrivFeatSwap_Functions.BrivFunctions.StrategicStrideId)
                     this.9JFeat := true
-                else if (v == IC_BrivGemFarm_BrivFeatSwap_Functions.BrivFunctions.AccurateAcrobaticsFeatId)
+                else if (v == IC_BrivGemFarm_Class.BrivFunctions.AccurateAcrobaticsId)
                     this.AAFeat := true
+                else if (v == IC_BrivGemFarm_Class.BrivFunctions.ThunderStepId)
+                    this.TSFeat := true
             }
             if (skipChance == 1 || skipAmount == 0) ; Perfect jump or no Briv in formation
                 this.AvailableJumps := [skipAmount]
@@ -52,6 +59,41 @@ class BrivFunctions
         {
             return this.AvailableJumps.Length() == 2
         }
+
+        HighestAvailableJump
+        {
+            get
+            {
+                return this.AvailableJumps[this.AvailableJumps.Length()]
+            }
+        }
+    }
+
+    ThunderStepMult
+    {
+        get
+        {
+            return 1 + 0.01 * this.ThunderStepPercentIncrease
+        }
+    }
+
+    ReadUnnaturalHastePurchased()
+    {
+        return g_SF.Memory.ReadHeroUpgradeIsPurchased(this.BrivId, this.UnnaturalHasteId)
+    }
+
+    ReadMetalbornPurchased()
+    {
+        return g_SF.Memory.ReadHeroUpgradeIsPurchased(this.BrivId, this.MetalbornId)
+    }
+
+    ReadSkipStacks()
+    {
+        size := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.areaSkipHandler.skipStacks.size.Read()
+        ; Sanity check, should be 2 for v601
+        if (size > 10)
+            return ""
+        return g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.areaSkipHandler.skipStacks.Queue[size - 1].size.Read()
     }
 
     GetBrivLoot()
