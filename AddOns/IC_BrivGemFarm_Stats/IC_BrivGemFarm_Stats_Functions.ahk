@@ -348,7 +348,8 @@ class IC_BrivGemFarm_Stats_Component
         this.StackFail := Max(this.StackFail, foundComs ? this.SharedRunData.StackFail : 0)
         resetsCount := g_SF.Memory.ReadResetsCount()
         if ( resetsCount > this.LastResetCount )
-            this.UpdateStartLoopStatsReset(foundComs, resetsCount)            
+            this.UpdateStartLoopStatsReset(foundComs, resetsCount)
+			g_SF.EmptyMem()
         if (foundComs)
             this.LastTriggerStart := this.SharedRunData.TriggerStart
         Critical, Off
