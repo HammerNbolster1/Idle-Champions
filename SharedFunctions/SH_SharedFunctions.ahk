@@ -253,7 +253,7 @@ class SH_SharedFunctions
                 if !(DllCall("psapi\GetProcessMemoryInfo", "ptr", hProcess, "ptr", &PMC_EX, "uint", size))
                     return (ErrorLevel := 2) & 0, DllCall("CloseHandle", "ptr", hProcess)
             DllCall("CloseHandle", "ptr", hProcess)
-            return Round(NumGet(PMC_EX, 8 + A_PtrSize * 8, "uptr") / 1024**2, 2)
+            return Round(NumGet(PMC_EX, 8 + A_PtrSize, "uptr") / 1024**2, 2)
         }
         return (ErrorLevel := 1) & 0
     }
