@@ -6,7 +6,7 @@ class IC_BrivGemFarm_Stats_Component
     static SettingsPath := A_LineFile . "\..\Stats_Settings.json"
     DefaultSettings := {"CompactTS":false,"Scientific":false}
     Settings := {}
-
+	
     doesExist := true
     StatsTabFunctions := {}
 
@@ -189,6 +189,7 @@ class IC_BrivGemFarm_Stats_Component
         ShiniesClassNN := GUIFunctions.GetToolTipTarget("ShiniesID")
 
         GUIFunctions.UseThemeTextColor("SpecialTextColor1", 700)
+		Gui, ICScriptHub:Font, s9
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w100 +Right, Bosses per hour:
         Gui, ICScriptHub:Add, Text, vbossesPhrID x+2 w65, ; % bossesPhr
 
@@ -198,6 +199,7 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, vGemsTotalID x+2 w300, ; % GemsTotal
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w100 +Right, Gems per hour:
         Gui, ICScriptHub:Add, Text, vGemsPhrID x+2 w300, ; % GemsPhr
+		Gui, ICScriptHub:Font, s8
         
         GUIFunctions.UseThemeTextColor("WarningTextColor", 700)
         GuiControlGet, pos, ICScriptHub:Pos, bossesPhrID
@@ -226,9 +228,11 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Tab, Stats
         GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
         Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h140 vBrivGemFarmStatsID, BrivGemFarm Stats:
+        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h160 vBrivGemFarmStatsID, BrivGemFarm Stats:
         Gui, ICScriptHub:Font, w400 
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, PlayServer:
+		Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, GemHunter:
+		Gui, ICScriptHub:Add, Text, vGemHunterID x+2 w200,
+		Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, PlayServer:
         Gui, ICScriptHub:Add, Text, vStatsPlayServerID x+2 w200, 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Lowest Haste after Reset:
         Gui, ICScriptHub:Add, Text, vStatsLowestHasteID x+2 w200, 
@@ -248,7 +252,7 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Picture, x%posImageX% y%posImageY% h30 w30 vEmStatsImage, %g_EmStatsImage%
         GuiControlGet, pos, ICScriptHub:Pos, BrivGemFarmStatsID
         g_DownAlign := g_DownAlign + posH -5
-        g_TabControlHeight := Max(g_TabControlHeight, 720)
+        g_TabControlHeight := Max(g_TabControlHeight, 740)
         GUIFunctions.RefreshTabControlSize()
         GUIFunctions.UseThemeTextColor()
     }
@@ -438,6 +442,7 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, dtTotalTimeID, % this.FormatMsec(this.TotalFarmTime)
         GuiControl, ICScriptHub:, bossesPhrID, % this.DecideScientific(this.BossesPerHour)
         GuiControl, ICScriptHub:, GemsPhrID, % this.DecideScientific(Round( this.GemsTotal / this.TotalFarmTimeHrs, 3 ))
+		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
     }
 
     StoreStartingValues()
@@ -591,7 +596,11 @@ class IC_BrivGemFarm_Stats_Component
             GuiControl, ICScriptHub:, LoopID, % "Error reading from gem farm script [Closed Script?]."
         }
     }
-
+	
+	GemHunter() {
+		isActive := g_SF.Memory.IsBuffActive("Potion of the Gem Hunter")
+		return isActive ? "Yes" : "No"
+	}
 
     ;==========================
     ; Stats GUI Reset Functions
@@ -658,6 +667,7 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, bossesPhrID, % this.BossesPerHour
         GuiControl, ICScriptHub:, GemsTotalID, % this.GemsTotal
         GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / this.TotalFarmTime, 3 )
+		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
         if(IsObject(this.SharedRunData))
         {
             GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
@@ -864,5 +874,5 @@ class IC_BrivGemFarm_Stats_Component
             }
         }
         return madeEdit
-    }
+    }	
 }

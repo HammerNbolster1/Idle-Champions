@@ -117,6 +117,19 @@ class IC_MemoryFunctions_Class
                 return (A_Index - 1)
         return ""
     }
+	
+	IsBuffActive(buffName) ;Is a Gem Hunter potion active
+	{
+		buffSize:=this.GameManager.game.gameInstances[this.GameInstance].BuffHandler.activeBuffs.size.Read()
+		if (buffSize < 0 OR size > 1000)
+			return false 
+		loop %buffSize%
+		{
+			if (this.GameManager.game.gameInstances[this.GameInstance].BuffHandler.activeBuffs[A_Index-1].Name.Read()==buffName) ;TODO: Find out if this gets localised; might need to use the effect name (although that would collide with anything else that gave +50% gems)
+				return true
+		}
+		return false
+	}
 
     ;=========================================
     ;General Game Values
