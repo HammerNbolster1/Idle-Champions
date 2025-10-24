@@ -6,7 +6,7 @@ class IC_BrivGemFarm_Stats_Component
     static SettingsPath := A_LineFile . "\..\Stats_Settings.json"
     DefaultSettings := {"CompactTS":false,"Scientific":false}
     Settings := {}
-	
+
     doesExist := true
     StatsTabFunctions := {}
 
@@ -38,6 +38,8 @@ class IC_BrivGemFarm_Stats_Component
     StatsRunsCount := 0
     DisplayScientific := false
     CompactTimestamps := false
+    w700Height := 0
+    w400Height := 0
     
     SharedRunData[]
     {
@@ -109,7 +111,8 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, vLoopAlignID xp+15 yp+25 , `Loop:
         GuiControlGet, pos, ICScriptHub:Pos, LoopAlignID
         g_LeftAlign := posX
-        Gui, ICScriptHub:Add, Text, vLoopID x+2 w395, Not Started
+        loopIDWidth := this.GetMaxElementWidth("LoopAlignID", "CurrentRunGroupID")
+        Gui, ICScriptHub:Add, Text, vLoopID x+2 w%loopIDWidth%, Not Started
         Gui, ICScriptHub:Font, w400
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Current Area Time
         Gui, ICScriptHub:Add, Text, vdtCurrentLevelTimeID x+2 w200, ; % dtCurrentLevelTime
@@ -120,8 +123,9 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, vg_StackCountSBID x+2 w200, ; % g_StackCountSB
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Haste Stack `Count:
         Gui, ICScriptHub:Add, Text, vg_StackCountHID x+2 w200, ; % g_StackCountH
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Last Close Game Reason:
-        Gui, ICScriptHub:Add, Text, vLastCloseGameReasonID x+2 w300,
+        Gui, ICScriptHub:Add, Text, vLastCloseGameReasonIDHeader x%g_LeftAlign% y+2, Last Close Game Reason:
+        lastCloseReasonWidth := this.GetMaxElementWidth("LastCloseGameReasonIDHeader", "CurrentRunGroupID")
+        Gui, ICScriptHub:Add, Text, vLastCloseGameReasonID x+2 w%lastCloseReasonWidth%, 
         GUIFunctions.UseThemeTextColor()
         GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
         posY += 1
@@ -131,6 +135,13 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Checkbox, x%posX% y%posY% vStatsCompactTimestamps, Use Compact Timestamps
         buttonFunc := ObjBindMethod(this, "SaveSettings")
         GuiControl,ICScriptHub: +g, StatsCompactTimestamps, % buttonFunc
+        
+        GuiControlGet, pos, ICScriptHub:Pos, LoopAlignID
+        this.w700Height := posH
+        GuiControlGet, pos, ICScriptHub:Pos, dtCurrentLevelTimeID
+        this.w400Height := posH
+        currentRunGroupIDHeight := (5 * this.w400Height) + this.w700Height + 22 + 19 * 2
+        GuiControl, ICScriptHub:Move, CurrentRunGroupID, h%currentRunGroupIDHeight%
     }
 
     ; Adds the Once per run group box to the stats tab page under the current run group.
@@ -139,7 +150,8 @@ class IC_BrivGemFarm_Stats_Component
         global
         GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
         g_DownAlign := posY + posH -5
-        local labelWidth := 100
+        fontSizeOffset := Max(0, this.w400Height - 13) * 5
+        local labelWidth := 100 + fontSizeOffset
         Gui, ICScriptHub:Font, w700
         Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h330 vOnceRunGroupID, Updated Once Per Full Run:
         Gui, ICScriptHub:Font, w400
@@ -164,17 +176,17 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Failed Stacking Tally by Type:
         Gui, ICScriptHub:Add, Text, vFailedStackingID x+2 w120,
 
-        labelWidth -= 20
-        chestsWidth := 55
+        labelWidth -= 10
+        chestsWidth := 60 + fontSizeOffset
         Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w%labelWidth%, Chest Counts:
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w%labelWidth% +Right, Chest Counts:
         Gui, ICScriptHub:Add, Text, x+2 w%chestsWidth% +Right, Opened
         Gui, ICScriptHub:Add, Text, x+2 w%chestsWidth% +Right, Bought
         Gui, ICScriptHub:Add, Text, vGoldsDroppedIDHeader x+2 w%chestsWidth% +Right, Dropped
         Gui, ICScriptHub:Font, w400
-		
+        
         GuiControlGet, pos, ICScriptHub:Pos, GoldsDroppedIDHeader
-		hLineWidth := ((posX + posW) - g_LeftAlign) + 3
+        hLineWidth := ((posX + posW) - g_LeftAlign) + 3
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+4 w%hLineWidth% h1 0x10 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth% +Right, Silver Chests:
         Gui, ICScriptHub:Add, Text, vSilversOpenedID x+2 w%chestsWidth% +Right, 
@@ -188,23 +200,24 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, vShiniesID x+2 w200,
         ShiniesClassNN := GUIFunctions.GetToolTipTarget("ShiniesID")
 
+        sphWidth := 130 + fontSizeOffset
         GUIFunctions.UseThemeTextColor("SpecialTextColor1", 700)
-		Gui, ICScriptHub:Font, s9
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w100 +Right, Bosses per hour:
-        Gui, ICScriptHub:Add, Text, vbossesPhrID x+2 w65, ; % bossesPhr
-
+        Gui, ICScriptHub:Add, Text, vBPHHeader x%g_LeftAlign% y+10 w%sphWidth% +Right, Bosses per hour:
+        Gui, ICScriptHub:Add, Text, vbossesPhrID x+2 w70, ; % bossesPhr
 
         GUIFunctions.UseThemeTextColor("SpecialTextColor2", 700)
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w100 +Right, Total Gems:
-        Gui, ICScriptHub:Add, Text, vGemsTotalID x+2 w300, ; % GemsTotal
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w100 +Right, Gems per hour:
-        Gui, ICScriptHub:Add, Text, vGemsPhrID x+2 w300, ; % GemsPhr
-		Gui, ICScriptHub:Font, s8
+        Gui, ICScriptHub:Add, Text, vTotGemsHeader x%g_LeftAlign% y+10 w%sphWidth% +Right, Total Gems:
+        totGemsWidth := this.GetMaxElementWidth("TotGemsHeader", "OnceRunGroupID") - 30
+        Gui, ICScriptHub:Add, Text, vGemsTotalID x+2 w%totGemsWidth%, ; % GemsTotal
+        Gui, ICScriptHub:Add, Text, vGPHHeader x%g_LeftAlign% y+2 w%sphWidth% +Right, Gems per hour:
+        gphWidth := this.GetMaxElementWidth("GPHHeader", "OnceRunGroupID") - 30
+        Gui, ICScriptHub:Add, Text, vGemsPhrID x+2 w%gphWidth%, ; % GemsPhr
         
         GUIFunctions.UseThemeTextColor("WarningTextColor", 700)
         GuiControlGet, pos, ICScriptHub:Pos, bossesPhrID
-        posX += 100
-        Gui, ICScriptHub:Add, Text, vNordomWarningID x%posX% y%posY% w220,
+        nordomX += posX + posW + 20
+        nordomWidth := this.GetMaxElementWidth("bossesPhrID", "OnceRunGroupID") - 20
+        Gui, ICScriptHub:Add, Text, vNordomWarningID x%nordomX% y%posY% w%nordomWidth%, 
                
         GUIFunctions.UseThemeTextColor("DefaultTextColor")
         GuiControlGet, pos, ICScriptHub:Pos, OnceRunGroupID
@@ -219,6 +232,9 @@ class IC_BrivGemFarm_Stats_Component
         GuiControlGet, pos, ICScriptHub:Pos, OnceRunGroupID
         g_DownAlign := g_DownAlign + posH -5
         GUIFunctions.UseThemeTextColor()
+        
+        onceRunGroupIDHeight := (12 * this.w400Height) + (4 * this.w700Height) + 81 + (18 * 2)
+        GuiControl, ICScriptHub:Move, OnceRunGroupID, h%onceRunGroupIDHeight%
     }
 
     ; Adds the briv gem farm stats group to the stats page below the current run group 
@@ -226,13 +242,12 @@ class IC_BrivGemFarm_Stats_Component
     {
         global
         Gui, ICScriptHub:Tab, Stats
-        GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
+        GuiControlGet, pos, ICScriptHub:Pos, OnceRunGroupID
+        g_DownAlign := posY + posH -5
         Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h160 vBrivGemFarmStatsID, BrivGemFarm Stats:
+        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h140 vBrivGemFarmStatsID, BrivGemFarm Stats:
         Gui, ICScriptHub:Font, w400 
-		Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, GemHunter:
-		Gui, ICScriptHub:Add, Text, vGemHunterID x+2 w200,
-		Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, PlayServer:
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, PlayServer:
         Gui, ICScriptHub:Add, Text, vStatsPlayServerID x+2 w200, 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Lowest Haste after Reset:
         Gui, ICScriptHub:Add, Text, vStatsLowestHasteID x+2 w200, 
@@ -252,9 +267,12 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Picture, x%posImageX% y%posImageY% h30 w30 vEmStatsImage, %g_EmStatsImage%
         GuiControlGet, pos, ICScriptHub:Pos, BrivGemFarmStatsID
         g_DownAlign := g_DownAlign + posH -5
-        g_TabControlHeight := Max(g_TabControlHeight, 740)
+        g_TabControlHeight := Max(g_TabControlHeight, 720)
         GUIFunctions.RefreshTabControlSize()
         GUIFunctions.UseThemeTextColor()
+        
+        brivGemFarmStatsIDHeight := (7 * this.w400Height) + 18 + (18 * 2)
+        GuiControl, ICScriptHub:Move, BrivGemFarmStatsID, h%brivGemFarmStatsIDHeight%
     }
 
     ; Calls the functions that have been added to the stats tab via the AddStatsTabMod function
@@ -357,8 +375,7 @@ class IC_BrivGemFarm_Stats_Component
         this.StackFail := Max(this.StackFail, foundComs ? this.SharedRunData.StackFail : 0)
         resetsCount := g_SF.Memory.ReadResetsCount()
         if ( resetsCount > this.LastResetCount )
-            this.UpdateStartLoopStatsReset(foundComs, resetsCount)
-			g_SF.EmptyMem()
+            this.UpdateStartLoopStatsReset(foundComs, resetsCount)            
         if (foundComs)
             this.LastTriggerStart := this.SharedRunData.TriggerStart
         Critical, Off
@@ -442,7 +459,6 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, dtTotalTimeID, % this.FormatMsec(this.TotalFarmTime)
         GuiControl, ICScriptHub:, bossesPhrID, % this.DecideScientific(this.BossesPerHour)
         GuiControl, ICScriptHub:, GemsPhrID, % this.DecideScientific(Round( this.GemsTotal / this.TotalFarmTimeHrs, 3 ))
-		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
     }
 
     StoreStartingValues()
@@ -596,11 +612,7 @@ class IC_BrivGemFarm_Stats_Component
             GuiControl, ICScriptHub:, LoopID, % "Error reading from gem farm script [Closed Script?]."
         }
     }
-	
-	GemHunter() {
-		isActive := g_SF.Memory.IsBuffActive("Potion of the Gem Hunter")
-		return isActive ? "Yes" : "No"
-	}
+
 
     ;==========================
     ; Stats GUI Reset Functions
@@ -667,7 +679,6 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, bossesPhrID, % this.BossesPerHour
         GuiControl, ICScriptHub:, GemsTotalID, % this.GemsTotal
         GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / this.TotalFarmTime, 3 )
-		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
         if(IsObject(this.SharedRunData))
         {
             GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
@@ -791,13 +802,13 @@ class IC_BrivGemFarm_Stats_Component
     {
         local form
         if (ms < 60000)
-            form := this.CompactTimestamps ? "ss'.'ff" : "s's 'ff'ms"
+            form := this.CompactTimestamps ? "ss'.'fff" : "s's 'fff'ms"
         else if (ms < 3600000)
-            form := this.CompactTimestamps ? "mm':'ss'.'ff" : "m'm 'ss's 'ff'ms"
+            form := this.CompactTimestamps ? "mm':'ss'.'fff" : "m'm 'ss's 'fff'ms"
         else if (ms < 86400000)
-            form := this.CompactTimestamps ? "h':'mm':'ss'.'ff" : "h'h 'mm'm 'ss's 'ff'ms"
+            form := this.CompactTimestamps ? "h':'mm':'ss'.'fff" : "h'h 'mm'm 'ss's 'fff'ms"
         else
-            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'ff" : "d'd 'h'h 'mm'm 'ss's 'ff'ms"
+            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'fff" : "d'd 'h'h 'mm'm 'ss's 'fff'ms"
         VarSetCapacity(t,256),DllCall("GetDurationFormat","uint",2048,"uint",0,"ptr",0,"int64",ms*10000,"wstr",form,"wstr",t,"int",256)
         return t
     }
@@ -874,5 +885,14 @@ class IC_BrivGemFarm_Stats_Component
             }
         }
         return madeEdit
-    }	
+    }
+    
+    GetMaxElementWidth(headerEle, groupBoxEle, logg := false)
+    {
+        GuiControlGet, eh, ICScriptHub:Pos, %headerEle%
+        GuiControlGet, gb, ICScriptHub:Pos, %groupBoxEle%
+        if (logg)
+            MsgBox, % "gbW" . gbW . " / ehW" . ehW . " / ehX" . ehX . " / gbX" . gbX
+        return (gbW - (4 + (ehX - gbX) + ehW)) - 10
+    }
 }
