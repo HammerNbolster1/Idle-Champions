@@ -38,7 +38,7 @@ class IC_BrivGemFarm_Stats_Component
     StatsRunsCount := 0
     DisplayScientific := false
     CompactTimestamps := false
-    w800Height := 0
+    w700Height := 0
     w400Height := 0
     
     SharedRunData[]
@@ -167,7 +167,7 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, vFastRunTimeID x+2 w150,
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth% +Right, Slowest Run Time:
         Gui, ICScriptHub:Add, Text, vSlowRunTimeID x+2 w150,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth% +Right, Avg. Run Time:
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth% +Right, Average Run Time:
         Gui, ICScriptHub:Add, Text, vAvgRunTimeID x+2 w150,
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10 w%labelWidth% +Right, Fail Run Time:
         Gui, ICScriptHub:Add, Text, vFailRunTimeID x+2 w150,
@@ -192,7 +192,7 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Text, vSilversOpenedID x+2 w%chestsWidth% +Right, 
         Gui, ICScriptHub:Add, Text, vSilversBoughtID x+2 w%chestsWidth% +Right, 
         Gui, ICScriptHub:Add, Text, vSilversDroppedID x+2 w%chestsWidth% +Right, 
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth% +Right, Golds Chests:
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 w%labelWidth% +Right, Gold Chests:
         Gui, ICScriptHub:Add, Text, vGoldsOpenedID x+2 w%chestsWidth% +Right, 
         Gui, ICScriptHub:Add, Text, vGoldsBoughtID x+2 w%chestsWidth% +Right, 
         Gui, ICScriptHub:Add, Text, vGoldsDroppedID x+2 w%chestsWidth% +Right, 
@@ -245,11 +245,9 @@ class IC_BrivGemFarm_Stats_Component
         GuiControlGet, pos, ICScriptHub:Pos, OnceRunGroupID
         g_DownAlign := posY + posH -5
         Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h180 vBrivGemFarmStatsID, BrivGemFarm Stats:
+        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h140 vBrivGemFarmStatsID, BrivGemFarm Stats:
         Gui, ICScriptHub:Font, w400 
-		Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, GemHunter:
-		Gui, ICScriptHub:Add, Text, vGemHunterID x+2 w200,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, PlayServer:
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, Game Server:
         Gui, ICScriptHub:Add, Text, vStatsPlayServerID x+2 w200, 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Lowest Haste after Reset:
         Gui, ICScriptHub:Add, Text, vStatsLowestHasteID x+2 w200, 
@@ -269,11 +267,11 @@ class IC_BrivGemFarm_Stats_Component
         Gui, ICScriptHub:Add, Picture, x%posImageX% y%posImageY% h30 w30 vEmStatsImage, %g_EmStatsImage%
         GuiControlGet, pos, ICScriptHub:Pos, BrivGemFarmStatsID
         g_DownAlign := g_DownAlign + posH -5
-        g_TabControlHeight := Max(g_TabControlHeight, 740)
+        g_TabControlHeight := Max(g_TabControlHeight, 720)
         GUIFunctions.RefreshTabControlSize()
         GUIFunctions.UseThemeTextColor()
         
-        brivGemFarmStatsIDHeight := (8 * this.w400Height) + 19 + (18 * 2)
+        brivGemFarmStatsIDHeight := (7 * this.w400Height) + 18 + (18 * 2)
         GuiControl, ICScriptHub:Move, BrivGemFarmStatsID, h%brivGemFarmStatsIDHeight%
     }
 
@@ -461,7 +459,6 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, dtTotalTimeID, % this.FormatMsec(this.TotalFarmTime)
         GuiControl, ICScriptHub:, bossesPhrID, % this.DecideScientific(this.BossesPerHour)
         GuiControl, ICScriptHub:, GemsPhrID, % this.DecideScientific(Round( this.GemsTotal / this.TotalFarmTimeHrs, 3 ))
-		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
     }
 
     StoreStartingValues()
@@ -581,7 +578,7 @@ class IC_BrivGemFarm_Stats_Component
             textColor := Format("{:#x}", GUIFunctions.CurrentTheme["HeaderTextColor"])
             GuiControl, ICScriptHub: +c%textColor%, LoopID,
             GuiControl, ICScriptHub:, LoopID, % SharedRunData.LoopString
-            GuiControl, ICScriptHub:, StatsPlayServerID, % SharedRunData.PlayServer
+            GuiControl, ICScriptHub:, StatsPlayServerID, % (SharedRunData.PlayServer == "ps22" && g_SF.Memory.ReadWebRoot() == "" ? "Unknown" : SharedRunData.PlayServer)
             if (SharedRunData.LowestHasteStacks  AND SharedRunData.LowestHasteStacks < this.LastLowestHasteStacks)
             {
                 this.LastLowestHasteStacks := SharedRunData.LowestHasteStacks
@@ -615,11 +612,7 @@ class IC_BrivGemFarm_Stats_Component
             GuiControl, ICScriptHub:, LoopID, % "Error reading from gem farm script [Closed Script?]."
         }
     }
-	
-	GemHunter() {
-		isActive := g_SF.Memory.IsBuffActive("Potion of the Gem Hunter")
-		return isActive ? "Yes" : "No"
-	}
+
 
     ;==========================
     ; Stats GUI Reset Functions
@@ -686,7 +679,6 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, bossesPhrID, % this.BossesPerHour
         GuiControl, ICScriptHub:, GemsTotalID, % this.GemsTotal
         GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / this.TotalFarmTime, 3 )
-		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
         if(IsObject(this.SharedRunData))
         {
             GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
@@ -697,7 +689,7 @@ class IC_BrivGemFarm_Stats_Component
             GuiControl, ICScriptHub:, GoldsBoughtID, % this.DecideScientific(this.SharedRunData.PurchasedGoldChests)
             GuiControl, ICScriptHub:, GoldsDroppedID, % this.DecideScientific(this.CalculateDroppedChests(currentGoldChests, 2))
             GuiControl, ICScriptHub:, ShiniesID, % this.SharedRunData.ShinyCount
-            GuiControl, ICScriptHub:, StatsPlayServerID, % this.SharedRunData.PlayServer
+            GuiControl, ICScriptHub:, StatsPlayServerID, % (this.SharedRunData.PlayServer == "ps22" && g_SF.Memory.ReadWebRoot() == "" ? "Unknown" : this.SharedRunData.PlayServer)
             GuiControl, ICScriptHub:, StatsLowestHasteID, % this.SharedRunData.LowestHasteStacks == 9999999 ? "" : this.SharedRunData.LowestHasteStacks
             GuiControl, ICScriptHub:, BossesHitThisRunID, % this.SharedRunData.BossesHitThisRun
             GuiControl, ICScriptHub:, TotalBossesHitID, % this.SharedRunData.TotalBossesHit
@@ -810,13 +802,13 @@ class IC_BrivGemFarm_Stats_Component
     {
         local form
         if (ms < 60000)
-            form := this.CompactTimestamps ? "ss'.'ff" : "s's 'ff'ms"
+            form := this.CompactTimestamps ? "ss'.'fff" : "s's 'fff'ms"
         else if (ms < 3600000)
-            form := this.CompactTimestamps ? "mm':'ss'.'ff" : "m'm 'ss's 'ff'ms"
+            form := this.CompactTimestamps ? "mm':'ss'.'fff" : "m'm 'ss's 'fff'ms"
         else if (ms < 86400000)
-            form := this.CompactTimestamps ? "h':'mm':'ss'.'ff" : "h'h 'mm'm 'ss's 'ff'ms"
+            form := this.CompactTimestamps ? "h':'mm':'ss'.'fff" : "h'h 'mm'm 'ss's 'fff'ms"
         else
-            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'ff" : "d'd 'h'h 'mm'm 'ss's 'ff'ms"
+            form := this.CompactTimestamps ? "d'd 'h':'mm':'ss'.'fff" : "d'd 'h'h 'mm'm 'ss's 'fff'ms"
         VarSetCapacity(t,256),DllCall("GetDurationFormat","uint",2048,"uint",0,"ptr",0,"int64",ms*10000,"wstr",form,"wstr",t,"int",256)
         return t
     }
