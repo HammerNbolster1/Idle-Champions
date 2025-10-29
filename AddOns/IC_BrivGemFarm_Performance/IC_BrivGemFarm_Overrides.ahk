@@ -27,16 +27,18 @@ class IC_BrivSharedFunctions_Class
     RestartAdventure( reason := "" )
     {
         targetStackModifier := g_SF.CalculateBrivStacksToReachNextModronResetZone()
-        g_BrivGemFarm.StackNormal(30000, targetStackModifier, forceStack := True) ; Give 30s max to try to gain some stacks before a forced reset.
+        if(!this.StackedBeforeRestart := True)
+            g_BrivGemFarm.StackNormal(30000, targetStackModifier, forceStack := True) ; Give 30s max to try to gain some stacks before a forced reset.
+        this.StackedBeforeRestart := True
         g_SharedData.LoopString := "ServerCall: Restarting adventure"
         jsonObj := base.LoadObjectFromJSON(A_LineFile . "\..\ServerCall_Settings.json")
         thunderStepMod := g_SF.BrivHasThunderStep() ? IC_BrivGemFarm_Class.BrivFunctions.ThunderStepMult : 1
         this.CloseIC( reason )
-        stacks := Floor(((this.sprint?this.sprint:0) + (this.steelbones?this.steelbones:0)) * thunderStepMod)
+        stacks := Floor(((g_SF.steelbones ? g_SF.steelbones : 0) * thunderStepMod) + g_SF.sprint + 0 )
         if (stacks >= 190000)
             g_SharedData.LoopString := "ServerCall: Restarting with >190k stacks, some stacks lost."
         ; Save stacks
-        if (stacks > 49) ; minimum is 49
+        if (stacks >= 48) ; minimum is 48
             g_ServerCall.CallPreventStackFail(stacks)
         else
             g_SharedData.LoopString := "ServerCall: Restarting adventure (no manual stack conv.)"
@@ -50,6 +52,7 @@ class IC_BrivSharedFunctions_Class
         scriptLocation := A_LineFile . "\..\IC_BrivGemFarm_ServerCalls.ahk"
         Run, %A_AhkPath% "%scriptLocation%"
         this.AlreadyOfflineStackedThisRun := False
+        this.StackedBeforeRestart := False
     }
 
     ; Store important user data [UserID, Hash, InstanceID, Briv Stacks, Gems, Chests]
