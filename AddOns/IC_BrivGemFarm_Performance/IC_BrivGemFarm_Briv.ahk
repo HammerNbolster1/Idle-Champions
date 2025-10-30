@@ -2,7 +2,8 @@
 ; Briv Steelbones and Haste related functions
 ;=========================================================
 
-; Original Credit ImpEGamer - https://github.com/imp444/IC_Addons/
+; Original Credit ImpEGamer - https://github.com/imp444/IC_Addons/ 
+; IC_BrivGemFarm_Class.BrivFunctions
 class BrivFunctions
 {
     static BrivId := 58
@@ -20,7 +21,7 @@ class BrivFunctions
     static MinHaste := 48
     static MetalbornUpgradeLevel := 180
     static BrivSkipConfigByFavorite := []
-
+    static HasSwappedFavoritesThisRun := False
     class BrivSkipConfig ; IC_BrivGemFarm_Class.BrivFunctions.BrivSkipConfig
     {
         SkipAmount := 0
@@ -87,15 +88,6 @@ class BrivFunctions
     ReadMetalbornPurchased()
     {
         return g_SF.Memory.ReadHeroUpgradeIsPurchased(this.BrivId, this.MetalbornId)
-    }
-
-    ReadSkipStacks()
-    {
-        size := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.areaSkipHandler.skipStacks.size.Read()
-        ; Sanity check, should be 2 for v601
-        if (size > 10)
-            return ""
-        return g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.areaSkipHandler.skipStacks.Queue[size - 1].size.Read()
     }
 
     GetBrivLoot()
@@ -209,8 +201,8 @@ class BrivFunctions
 
     GetHighestBrivSkipAmount()
     {
-        BrivID := IC_BrivGemFarm_HybridTurboStacking_Functions.BRIV_ID
-        BrivJumpSlot := IC_BrivGemFarm_HybridTurboStacking_Functions.BrivJumpSlot
+        BrivID := this.BrivId
+        BrivJumpSlot := this.BrivJumpSlot
         gild := g_SF.Memory.ReadHeroLootGild(BrivID, BrivJumpSlot)
         ilvls := Floor(g_SF.Memory.ReadHeroLootEnchant(BrivID, BrivJumpSlot))
         rarity := g_SF.Memory.ReadHeroLootRarityValue(BrivID, BrivJumpSlot)
@@ -227,7 +219,7 @@ class BrivFunctions
         ; Move back one zone if the last zone before reset is a boss.
         if (Mod(lastZone, 5 ) == 0)
             lastZone -= 1
-        skipAmount := IC_BrivGemFarm_HybridTurboStacking_Functions.GetHighestBrivSkipAmount()
+        skipAmount := this.GetHighestBrivSkipAmount()
         return lastZone - skipAmount - 1
     }
 
