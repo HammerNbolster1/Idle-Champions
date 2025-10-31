@@ -118,8 +118,7 @@ class IC_MemoryFunctions_Class
         return ""
     }
 	
-	IsBuffActive(buffName) ;Is a Gem Hunter potion active
-	{
+	IsBuffActive(buffName){ ;Is a Gem Hunter potion active
 		buffSize:=this.GameManager.game.gameInstances[this.GameInstance].BuffHandler.activeBuffs.size.Read()
 		if (buffSize < 0 OR size > 1000)
 			return false 
