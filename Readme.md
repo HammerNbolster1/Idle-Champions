@@ -12,7 +12,7 @@ It has been a long time but I think it's time I bring the script over to my prof
 
 I have included a batch file to help the transition of connecting most common addons (and mine) to the main script easier if not using the remote origin change. It is [here](https://github.com/antilectual/Idle-Champions/tree/main/mklink-default.txt). Just edit it to use the directories you personally use, rename it .bat, and run to link the addons into Script Hub. I recommend having the script and addons downloaded through Github desktop (or other git client) to make keeping them updated easier.
 
-***Note***: Settings that may need to be re-updated - BrivGemFarm, Theme Manager, and Addon Management (Re-enabling the addons). Copying settings from previous versions should work fine also. Settings from addons should remain if properly using the junctions (mklink file).
+***Note***: Settings that may need to be re-updated after switch if they didn't stay - BrivGemFarm, Theme Manager, and Addon Management (Re-enabling the addons). Copying settings from previous versions should work fine also. Settings from addons should remain if properly using the junctions (mklink file).
   
  ## 
   

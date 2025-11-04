@@ -78,6 +78,10 @@ if ( g_UserSettings[ "WindowYPosition" ] == "" )
     g_UserSettings[ "WindowYPosition" ] := 0
 if ( g_UserSettings[ "WaitForProcessTime" ] == "" )
     g_UserSettings[ "WaitForProcessTime" ] := 0
+if ( g_UserSettings[ "TabControlHeight" ] == "" )
+    g_UserSettings[ "TabControlHeight" ] := 700
+if ( g_UserSettings[ "TabControlWidth" ] == "" )
+    g_UserSettings[ "TabControlWidth" ] := 430
 if ( g_UserSettings[ "CheckForUpdates" ] == "" )
 {
     g_UserSettings[ "CheckForUpdates" ] := 1
@@ -88,7 +92,8 @@ if(g_UserSettings[ "WriteSettings" ] == true)
     g_UserSettings.Delete("WriteSettings")
     SaveUserSettings()
 }
-
+global g_TabControlHeight := g_UserSettings[ "TabControlHeight" ]
+global g_TabControlWidth := g_UserSettings[ "TabControlWidth" ]
 global g_SF := new SH_SharedFunctions ; includes MemoryFunctions in g_SF.Memory
 
 ;define a new gui with tabs and buttons
