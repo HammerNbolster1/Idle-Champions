@@ -117,6 +117,7 @@ class IC_BrivGemFarm_Class
         this.StackFailAreasThisRunTally := {}
         this.StackFailRetryAttempt := 0
         this.DoneLeveling := False
+        g_SF.FormationLevelingLock := False
         g_SF.AlreadyOfflineStackedThisRun := false
         g_SharedData.BossesHitThisRun := 0
         g_SharedData.SwapsMadeThisRun := 0
@@ -202,7 +203,7 @@ class IC_BrivGemFarm_Class
                 champID := g_SF.Memory.ReadSelectedChampIDBySeat(seatID)
                 if(this.CanAffordUpgrade(champID) AND !g_SF.Memory.ReadBoughtLastUpgradeBySeat(seatID))
                 {
-                    if(!g_SF.MemoryDoesChampHavePurchasedWithoutUpgraded(champID))
+                    if(!g_SF.Memory.DoesChampHavePurchasedWithoutUpgraded(champID))
                     ; if(!(g_SF.Memory.ReadChampLvlByID(champID) > (g_SF.Memory.GetHighestLevelRequiredForUpgradesByChampID(champID)) + 100))
                         index := index + 1, currKeySpam.Push(keyspam[index - 1]) ; increment index but add index from before increment
                 }
@@ -218,11 +219,9 @@ class IC_BrivGemFarm_Class
                 g_SF.DirectedInput(,,currKeySpam*)
                 Sleep, %sleepTime%
             }
-            else
-                this.DoneLeveling := True
         }
         else
-            currKeySpam.Push("{ClickDmg}")
+            this.DoneLeveling := True, currKeySpam.Push("{ClickDmg}")
         g_SF.DirectedInput(currKeySpam*)
     }
 
