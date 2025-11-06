@@ -65,7 +65,7 @@ AddonManagementMoveUpClicked(){
 	if(SelectedRow := LV_GetNext()){
 		if(SelectedRow > 1){
 			WantedRow := SelectedRow -1
-			if(AddonManagement.SwitchOrderAddons(SelectedRow,WantedRow)){
+			if(AddonManagement.SwitchOrderAddons(SelectedRow,WantedRow,False,True)){
 				AddonManagement.NeedSave:=1
 				AddonManagement.GenerateListViewContent("AddonManagement", "AddonsAvailableID")
 				LV_Modify(WantedRow, "Select")
@@ -82,7 +82,7 @@ AddonManagementMoveDownClicked(){
 	if(SelectedRow := LV_GetNext()){
 		if(SelectedRow < LV_GetCount()){
 			WantedRow := SelectedRow + 1
-			if(AddonManagement.SwitchOrderAddons(SelectedRow,WantedRow)){
+			if(AddonManagement.SwitchOrderAddons(SelectedRow,WantedRow,False,False)){
 				AddonManagement.NeedSave:=1
 				AddonManagement.GenerateListViewContent("AddonManagement", "AddonsAvailableID")
 				LV_Modify(WantedRow, "Select")
