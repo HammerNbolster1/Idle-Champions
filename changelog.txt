@@ -1,3 +1,10 @@
+November 6, 2025
+    Added example MKLink file to repo.
+    Updated Readme.md.
+    Added user settings for TabControlHeight and TabControlWidth.
+    Fixed connect button not connecting.
+    Fixed addon management not maintaining proper ordering. (May require reordering addons after update, but restrictions now enforced properly when moving them)
+
 November 3, 2025
     Updated how formation checks are done, especially around stacking formations.
     Compromise between speed and accuracy.
