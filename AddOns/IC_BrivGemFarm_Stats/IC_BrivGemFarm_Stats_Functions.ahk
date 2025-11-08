@@ -209,16 +209,22 @@ class IC_BrivGemFarm_Stats_Component
 
         sphWidth := 130 + fontSizeOffset
         GUIFunctions.UseThemeTextColor("SpecialTextColor1", 700)
+        Gui, ICScriptHub:Font, s9, Comic Sans MS
         Gui, ICScriptHub:Add, Text, vBPHHeader x%g_LeftAlign% y+10 w%sphWidth% +Right, Bosses per hour:
         Gui, ICScriptHub:Add, Text, vbossesPhrID x+2 w70, ; % bossesPhr
+        Gui, ICScriptHub:Font, w700
+        Gui, ICScriptHub:Font
 
         GUIFunctions.UseThemeTextColor("SpecialTextColor2", 700)
+        Gui, ICScriptHub:Font, s9, Comic Sans MS
         Gui, ICScriptHub:Add, Text, vTotGemsHeader x%g_LeftAlign% y+10 w%sphWidth% +Right, Total Gems:
         totGemsWidth := this.GetMaxElementWidth("TotGemsHeader", "OnceRunGroupID") - 30
         Gui, ICScriptHub:Add, Text, vGemsTotalID x+2 w%totGemsWidth%, ; % GemsTotal
         Gui, ICScriptHub:Add, Text, vGPHHeader x%g_LeftAlign% y+2 w%sphWidth% +Right, Gems per hour:
         gphWidth := this.GetMaxElementWidth("GPHHeader", "OnceRunGroupID") - 30
         Gui, ICScriptHub:Add, Text, vGemsPhrID x+2 w%gphWidth%, ; % GemsPhr
+        Gui, ICScriptHub:Font, w700
+        Gui, ICScriptHub:Font
         
         GUIFunctions.UseThemeTextColor("WarningTextColor", 700)
         GuiControlGet, pos, ICScriptHub:Pos, bossesPhrID
@@ -240,7 +246,7 @@ class IC_BrivGemFarm_Stats_Component
         g_DownAlign := g_DownAlign + posH -5
         GUIFunctions.UseThemeTextColor()
         
-        onceRunGroupIDHeight := (12 * this.w400Height) + (4 * this.w700Height) + 81 + (18 * 2)
+        onceRunGroupIDHeight := (12.5 * this.w400Height) + (4 * this.w700Height) + 81 + (18 * 2)
         GuiControl, ICScriptHub:Move, OnceRunGroupID, h%onceRunGroupIDHeight%
     }
 
