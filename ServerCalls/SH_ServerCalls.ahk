@@ -12,7 +12,6 @@ class SH_ServerCalls
 
     BasicServerCall( url, timeout := 60000 ) 
     {
-
         response := ""
         WR := ComObjCreate( "WinHttp.WinHttpRequest.5.1" )
         WR.SetTimeouts( 0, 45000, 30000, timeout )
@@ -40,9 +39,9 @@ class SH_ServerCalls
     ; Load global server call Settings into this class.
     LoadSettings(settingsLoc := "")
     {
-        settingsLoc := settingsLoc ? settingsLoc :  A_LineFile . "\..\Settings.json"
+        settingsLoc := settingsLoc ? settingsLoc :  A_LineFile . "\..\ServerCall_Settings.json"
         this.Settings := SH_SharedFunctions.LoadObjectFromJSON( settingsLoc )
-        if(IsObject(this.Settings))
+        if(IsObject(this.Settings) AND this.settings["ProxyPort"] != "" AND this.settings["ProxyServer"] != "")
             this.proxy := this.settings["ProxyServer"] . ":" . this.settings["ProxyPort"]
     }
 }

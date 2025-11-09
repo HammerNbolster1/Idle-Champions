@@ -777,14 +777,20 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     ; Waits for the game to be in a ready state
     WaitForGameReady( timeout := 90000)
     {
-        timeoutTimerStart := A_TickCount
-        ElapsedTime := 0
-        ; wait for game to start
+        timer := new SH_SharedTimers()
         g_SharedData.LoopString := "Waiting for game started.."
         gameStarted := 0
-        while( ElapsedTime < timeout AND !gameStarted)
+        ; wait for game to start
+        while( !timer.IsTimeUp(timeout) AND !gameStarted) ; start timer
         {
             gameStarted := this.Memory.ReadGameStarted()
+            if(!gameStarted AND timer.IsTimeUp(Floor(3 * timeout / 4))) ; Game has not loaded after a long time, recheck.
+            {
+                existingProcessID := g_UserSettings[ "ExeName" ]
+                Process, Exist, %existingProcessID% ; Give another minute and retest. If failed, retry one time.
+                this.PID := ErrorLevel
+                this.Memory.OpenProcessReader()
+            }
             if (this.Memory.ReadIsSplashVideoActive() == 1)
                 this.DirectedInput(,,"{Esc}")
             ; If the popup warning message about failed offline progress, restart the game.
@@ -795,7 +801,6 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             ;     return false
             ; }
             Sleep, 100
-            ElapsedTime := A_TickCount - timeoutTimerStart
         }
         ; check if game has offline progress to calculate
         offlineTime := this.Memory.ReadOfflineTime()
@@ -804,11 +809,10 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         ; wait for offline progress to finish
         g_SharedData.LoopString := "Waiting for offline progress.."
         offlineDone := 0
-        while( ElapsedTime < timeout AND !offlineDone)
+        while( !timer.IsTimeUp(timeout) AND !offlineDone)
         {
             offlineDone := this.Memory.ReadOfflineDone()
             Sleep, 250
-            ElapsedTime := A_TickCount - timeoutTimerStart
         }
         ; finished before timeout
         if(offlineDone)
