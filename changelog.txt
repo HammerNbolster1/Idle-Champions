@@ -2,6 +2,7 @@ November 9, 2025
     Fixed issue with servercalls that could prevent non-BrivGemFarm scripts from using it without a proxy in settings.json.
     Added an extra test when restarting the game to recheck if a game has opened and closed and reopened during a restart.
     Removed most old pointers from the Pointer Version Picker.
+    Fixed two issues in logic when restarting game.
 
 November 6, 2025
     Added example MKLink file to repo.
