@@ -301,7 +301,7 @@ class IC_BrivGemFarm_Class
         gemsMax := g_BrivUserSettings[ "ForceOfflineGemThreshold" ]
         runsMax := g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
         ; hybrid stacking not used. Use default test for offline stacking. 
-        if !( (gemsMax > 1) OR (runsMax > 0) )
+        if !( (gemsMax > 0) OR (runsMax > 1) )
             return ( g_BrivUserSettings [ "RestartStackTime" ] > 0 )
         ; hybrid and already offline stacked
         if (g_SF.AlreadyOfflineStackedThisRun)
@@ -313,7 +313,7 @@ class IC_BrivGemFarm_Class
         if (runsMax > 1)
         {
             memRead := g_SF.Memory.ReadResetsCount()
-            if (memRead > 0 AND Mod( memRead, runsMax ) = 0)
+            if (memRead > 0 AND Mod( memRead, runsMax ) == 0)
                 return 1
         }
         ; hybrid stacking enabled but conditions for offline stacking not met

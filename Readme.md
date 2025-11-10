@@ -17,14 +17,14 @@ I have included a batch file to help the transition of connecting most common ad
  ## 
   
 ``v4.4.3 - 2025-10-19:``
-**Important**: This update requires updated addons for them to function properly. I have converted ImpEGamer's and Emmote's to function with the new version and they can be found at [https://github.com/antilectual/IC_Addons_1/](https://github.com/antilectual/IC_Addons_1) (for ImpEGamer's like Levelup) and [https://github.com/Emmote/IC_Addons](https://github.com/Emmote/IC_Addons) for Emmote's (until I complete a pull request).
+**Important**: This update requires updated addons for them to function properly. Find updated versions of ImpEGamer's addons at  [https://github.com/Imp444/IC_Addons/](https://github.com/Imp444/IC_Addons/) and Emmote's at  [https://github.com/Emmotes/IC_Addons/](https://github.com/Emmotes/IC_Addons/).
 
 ##
 2025-08-02:  
 
 Added important [imports](#imports) section. Please read it before running IC Script Hub.
 
-As of game version 629, due to changes with hotkeys the [LevelUp](https://github.com/antilectual/IC_Addons-1/tree/Anti-Changes/IC_BrivGemFarm_LevelUp_Extra) addon is required to run smoothly. Refer to [Addons.md](Addons.md) for links to more commonly used addons.
+As of game version 629, due to changes with hotkeys the [LevelUp](https://github.com/Imp444/IC_Addons/tree/main/IC_BrivGemFarm_LevelUp_Extra) addon is required to run smoothly. Refer to [Addons.md](Addons.md) for links to more commonly used addons.
 
 ---  
 ## Introduction

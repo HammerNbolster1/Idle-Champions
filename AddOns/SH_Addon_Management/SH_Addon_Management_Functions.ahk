@@ -80,7 +80,8 @@ Class AddonManagement
             currDependency := this.GetAddon(v.Name, v.Version, indexODependency)
             if (!IsObject(currDependency))
             {
-                MsgBox, 48, Warning, % "Can't find the addon """ . v.Name . " " . v.Version . """ required by " . Name . "`n" . Name . " will be disabled."
+                if(!this.ShowAddonGUI)
+                    MsgBox, 48, Warning, % "Can't find the addon """ . v.Name . " " . v.Version . """ required by " . Name . "`n" . Name . " will be disabled."
                 this.DisableAddon(Name,Version)
                 return false
             }
@@ -93,7 +94,10 @@ Class AddonManagement
             ; Check if current version or newer dependency is enabled
             if (!currDependency.Enabled)
             {
-                MsgBox, 52, Warning, % "Addon " . currDependency.Name . " is required by " . currAddon.Name . " but is disabled!`nDo you want to Enable this addon?`nYes: Enable " . currDependency.Name . "`nNo: Disable " . Name
+                if(!this.ShowAddonGUI)
+                    MsgBox, 52, Warning, % "Addon " . currDependency.Name . " is required by " . currAddon.Name . " but is disabled!`nDo you want to Enable this addon?`nYes: Enable " . currDependency.Name . "`nNo: Disable " . Name
+                else ; assume MsgBox yes on skip Msg
+                    isEnabled := this.EnableAddon(currDependency.Name,currDependency.Version), isModified := isEnabled OR isModified
                 IfMsgBox Yes 
                 {
                     isEnabled := this.EnableAddon(currDependency.Name,currDependency.Version)
@@ -221,7 +225,10 @@ Class AddonManagement
         }
         while(DependedAddon := this.CheckIsDependedOn(Name,Version))
         {
-            MsgBox, 52, Warning, % "Addon " . this.Addons[DependedAddon]["Name"] . " needs " . Name . ".`nDo you want to disable this addon?`nYes: Disable " . this.Addons[DependendAddon]["Name"] . "`nNo: Keep " . Name . " enabled."
+            if(!this.ShowAddonGUI)
+                MsgBox, 52, Warning, % "Addon " . this.Addons[DependedAddon]["Name"] . " needs " . Name . ".`nDo you want to disable this addon?`nYes: Disable " . this.Addons[DependendAddon]["Name"] . "`nNo: Keep " . Name . " enabled."
+            else ; assume MsgBox yes on skip Msg
+                this.DisableAddon(this.Addons[DependedAddon]["Name"],this.Addons[DependedAddon]["Version"])
             IfMsgBox Yes 
             {
                 this.DisableAddon(this.Addons[DependedAddon]["Name"],this.Addons[DependedAddon]["Version"])
@@ -259,7 +266,7 @@ Class AddonManagement
         ; Check if another version is already enabled
         for k,v in this.Addons 
         {
-            if(v.Name = Name AND v.Version != Version AND v.Enabled)
+            if(v.Name = Name AND v.Version != Version AND v.Enabled AND !this.ShowAddonGUI)
             {
                 MsgBox, 48, Warning, % "Another version of " . v.Name . " is already enabled, please disable that addon first!"
                 return 1
@@ -333,6 +340,10 @@ Class AddonManagement
         ; Show Addon GUI if no addons loaded
         if((this.EnabledAddons).Count() <= 0)
             this.ShowAddonGUI := True
+        if(this.ShowAddonGUI) ; TODO: no addons enabled, reorder to proper order and save ordering
+        {
+
+        }
         for k, v in this.EnabledAddons
         {
             versionValue := v.Version
@@ -519,10 +530,15 @@ Class AddonManagement
         GuiControl, AddonInfo: , AddonInfoAuthorID, % Addon.Author
         GuiControl, AddonInfo: , AddonInfoInfoID, % Addon.Info
         DependenciesText := ""
+        LoadAfterText := ""
         for k,v in Addon.Dependencies {
             DependenciesText .= "- " . v.Name . ": " . v.Version "`n"
         }
         GuiControl, AddonInfo: , AddonInfoDependenciesID, % DependenciesText
+        for k,v in Addon.LoadAfter {
+            LoadAfterText .= "- " . v.Name . ": " . v.Version "`n"
+        }
+        GuiControl, AddonInfo: , AddonInfoLoadAfterID, % LoadAfterText
         Gui, AddonInfo:Show
         GUIFunctions.UseThemeTitleBar("AddonInfo")
     }

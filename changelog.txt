@@ -1,3 +1,10 @@
+November 10, 2025
+    Fixed button locations in addon management.
+    Added the "LoadAfter" addons to the addon info section.
+    Updated base EGS check to check for contains "EGS" for webroot reads.
+    Fixed a couple of long-standing logic issues.
+    Updated Readme with Imp's updated repo.
+
 November 9, 2025
     Fixed issue with servercalls that could prevent non-BrivGemFarm scripts from using it without a proxy in settings.json.
     Added an extra test when restarting the game to recheck if a game has opened and closed and reopened during a restart.

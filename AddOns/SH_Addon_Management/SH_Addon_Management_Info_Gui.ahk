@@ -27,8 +27,11 @@ Gui, AddonInfo:Font, norm
 Gui, AddonInfo:Add, Text, x10 y+2 w%AddonInfowColLeft% Right, Author: 
 Gui, AddonInfo:Add, Text, vAddonInfoAuthorID x+2 w600,
 
-Gui, AddonInfo:Add, Text, x10 y+10 w%AddonInfowColLeft% Right, Dependencies: 
+Gui, AddonInfo:Add, Text, x10 y+10 w%AddonInfowColLeft% Left, Dependencies: 
 Gui, AddonInfo:Add, Text, x20 y+2 vAddonInfoDependenciesID w600 h50,
+
+Gui, AddonInfo:Add, Text, x10 y+2 w%AddonInfowColLeft% Left, Load After: 
+Gui, AddonInfo:Add, Text, x20 y+2 vAddonInfoLoadAfterID w600 h50,
 
 AddonInfoVisitUrl(){
     GuiControlGet, UrlToRun, AddonInfo:, AddonInfoUrlID

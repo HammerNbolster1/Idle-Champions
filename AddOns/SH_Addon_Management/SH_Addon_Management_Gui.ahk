@@ -14,16 +14,17 @@ AddonLVWidth+=4
 AddonLVHeight+=30
 ControlMove,,,,,AddonLVHeight,ahk_id %hLV%
 
-
+GuiControlGet, xyVal, AddonManagement:Pos, AddonsAvailableID
+AddonManagementLVButtonStartHeight := xyValH + xyValY + 10
 AddonNumberOfButtons := 6
 AddonButtonWidth := (AddonManagementWindowWidth - (5 * (AddonNumberOfButtons - 1))) / AddonNumberOfButtons
-AddonButtonYIncrease := AddonLVHeight + 5
-Gui, AddonManagement:Add, Button , yp+%AddonButtonYIncrease% w%AddonButtonWidth% gAddonManagementEnableClicked, Enable
+Gui, AddonManagement:Add, Button , x%xyValX% y%AddonManagementLVButtonStartHeight% w%AddonButtonWidth% vAddonManagementEnableButton gAddonManagementEnableClicked, Enable
 Gui, AddonManagement:Add, Button , x+5 w%AddonButtonWidth% gAddonManagementDisableClicked, Disable
 Gui, AddonManagement:Add, Button , x+5 w%AddonButtonWidth% gAddonManagementMoveUpClicked, Move Up
 Gui, AddonManagement:Add, Button , x+5 w%AddonButtonWidth% gAddonManagementMoveDownClicked, Move Down
 Gui, AddonManagement:Add, Button , x+5 w%AddonButtonWidth% gAddonManagementInfoClicked, Info
 Gui, AddonManagement:Add, Button , x+5 w%AddonButtonWidth% gAddonManagementSaveClicked, Save
+Gui, AddonManagement:Add, Text, x%xyValX% y+5, ; add empty space at bottom of addon management window.
 
 AddonManagementGuiClose(){
 	if(AddonManagement.NeedSave){
