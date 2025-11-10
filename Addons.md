@@ -2,7 +2,7 @@
 Script Hub uses an addon system to add/update functionality. Developers can write and share their own addons which can be downloaded and added to the addons directory and used from Script Hub.
 
 **Script Hub Addons can be found here:**  
-[Script Hub Addons](https://github.com/mikebaldi/Idle-Champions/tree/main/AddOns)  
+[Script Hub Addons](https://github.com/antilectual/Idle-Champions/tree/main/AddOns)  
 
 **Third Party Addons**:  
 [AreaSwapper](https://github.com/Pneumatus/IC-Addons/tree/main/IC_AreaSwapper_Extra) by Ismo  
