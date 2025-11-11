@@ -619,7 +619,6 @@ Class Addon
     Info :=
     Dependencies := []
     Enabled := 
-    serverCaller := new SH_ServerCalls()
 
     __New(SettingsObject) {
         If IsObject( SettingsObject ){
