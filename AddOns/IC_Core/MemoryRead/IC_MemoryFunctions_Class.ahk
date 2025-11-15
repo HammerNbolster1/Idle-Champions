@@ -70,7 +70,7 @@ class IC_MemoryFunctions_Class
 
     ;Updates installed after the date of this script may result in the pointer addresses no longer being accurate.
     GetVersion(){
-        return "v2.5.10, 2025-10-28"
+        return "v2.5.11, 2025-11-11"
     }
 
     GetPointersVersion(){
@@ -157,9 +157,37 @@ class IC_MemoryFunctions_Class
     }
 
     ReadActiveMonstersCount(){
-         return this.GameManager.game.gameInstances[this.GameInstance].Controller.area.activeMonsters.size.Read()
+        return this.GameManager.game.gameInstances[this.GameInstance].Controller.area.activeMonsters.size.Read()
     }
 
+    GetActiveEnemies(){
+        activeEnemies := {}
+        size := this.ReadActiveMonstersCount()
+        loop %size%
+            activeEnemies.Push(this.GameManager.game.gameInstances[this.GameInstance].Controller.area.activeMonsters[A_Index - 1])
+        return activeEnemies.Clone()
+    }
+
+    AreaHasArmoredEnemy()
+    {
+        listOfHealthRanges := {}
+        enemies := this.GetActiveEnemies() ; list of gameobjects
+        size := enemies.Count() 
+        loop %size%
+        {
+            enemyDef := enemies[A_Index].monsterDef
+            healthSize := enemyDef.HealthRanges.size.Read()
+            loop %healthSize%
+            {
+                armorStyle := enemyDef.HealthRanges[A_Index - 1].Read()
+                listOfHealthRanges.Push(armorStyle)
+                if(armorStyle == 2) ; 0 = normal, 1 = hits based, 2 = armored, 3 = favor
+                    return ListOfHealthRanges
+            }
+        }
+        return False
+    }
+    
     ReadResetting(){
         return this.GameManager.game.gameInstances[this.GameInstance].ResetHandler.Resetting.Read()
     }

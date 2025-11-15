@@ -333,16 +333,18 @@ Class AddonManagement
             if(!indexOfAddon)
                 this.AddonOrder.RemoveAt(k, 1)
         }
-        ; Order addons
-        this.OrderAddons()
+        ; Order addons according to their defined ordering in settings.
+        this.OrderAddons(this.AddonOrder)
         ; Enable addons
         this.EnabledAddons := IsObject(AddonSettings["Enabled Addons"]) ? AddonSettings["Enabled Addons"] : this.EnabledAddons
         ; Show Addon GUI if no addons loaded
         if((this.EnabledAddons).Count() <= 0)
             this.ShowAddonGUI := True
-        if(this.ShowAddonGUI) ; TODO: no addons enabled, reorder to proper order and save ordering
+        if(forceType == 2) ; on first run
         {
-
+            this.SortAddonsByDependency()
+            ArrFnc.ReverseJObjArray(this.Addons)
+            this.AddonOrder := this.Addons.Clone()
         }
         for k, v in this.EnabledAddons
         {
@@ -358,6 +360,48 @@ Class AddonManagement
         if (!FileExist(this.GeneratedAddonIncludeFile) or forceType == 2)
             this.GenerateIncludeFile() 
         this.ForceWrite(forceType)
+    }
+
+    SortAddonsByDependency()
+    {
+        n := this.Addons.Count()
+        ; Bubble sort addons
+        Loop, % n - 1 
+        {
+            i := A_Index
+            swapped := false
+            ; Inner loop for comparisons and swaps
+            Loop, % n - i 
+            {
+                j := A_Index
+                ; Compare adjacent elements
+                If (!this.IsDependent(this.Addons[j], this.Addons[j+1])) ; Swap elements if they are in the wrong order
+                    swapped := true, this.SwitchOrderAddons(j, j+1, true)
+            }
+            ; If no elements were swapped in a pass, the array is sorted
+            If (!swapped)
+                Break
+        }
+    }
+
+    ; is firstAddon dependent on secondAddon
+    IsDependent(firstAddon, secondAddon) ; is fir
+    {
+        if(this.CheckDependentOrder(firstAddon, secondAddon, "Dependencies") or this.CheckDependentOrder(firstAddon, secondAddon, "LoadAfter"))
+            return true
+        return false
+    }
+
+    ; is firstAddon dependent on secondAddon give the dependency type
+    CheckDependentOrder(firstAddon, secondAddon, dependencyType)
+    {
+        ; Check the this's dependencies for target (move up)
+        for k,dependency in firstAddon[dependencyType]
+        {
+            if(secondAddon.Name == dependency.Name and SH_VersionHelper.IsVersionSameOrNewer(secondAddon.Name, dependency.Name))
+                return true
+        }
+        return false
     }
 
     ForceWrite(forceType)
@@ -411,13 +455,13 @@ Class AddonManagement
     ;   
     ;     Function: OrderAddons()
     ;               Updates Addons class variable based on AddonOrder
-    ;   Parameters: None
+    ;   Parameters: addonsToOrder
     ;       Return: None
     ;
     ; ------------------------------------------------------------
-    OrderAddons()
+    OrderAddons(addonsToOrder)
     {
-        for k, v in this.AddonOrder 
+        for k, v in addonsToOrder
         {
             ; Search for the correct Addon
             this.GetAddon(v.Name, v.Version, addonIndex) 
@@ -443,7 +487,6 @@ Class AddonManagement
             return false
         if (this.CheckDependencyOrder(AddonNumber,Position, "LoadAfter", checkAbove) AND !Force)
             return false
-        NumberOfAddons := this.Addons.Count()
         temp := this.Addons[Position]
         this.Addons[Position] := this.Addons[AddonNumber]
         this.Addons[AddonNumber] := temp

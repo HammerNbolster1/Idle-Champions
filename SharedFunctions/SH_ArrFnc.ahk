@@ -76,16 +76,31 @@ class ArrFnc
         return var
     }
 
+    ; Reverses the order of the object array passed in. ({}, not [])
+    ReverseJObjArray(objArray)
+    {
+        loopCount := Floor(objArray.Count() / 2)
+        Loop %loopCount%
+        {
+            temp := objArray[A_Index]
+            lastIndex := objArray.Count() - (A_Index - 1)
+            objArray[A_Index] := objArray[lastIndex]
+            objArray[lastIndex] := temp
+        }
+    }
+
     ; Creates a string from an array. e.g. [1, F2, q, 6]
     GetAlphaNumericArrayString(array1)
     {   
         if(!array1.MaxIndex()) ; Array test
             return ""
+        if(ObjGetBase(array1).__Class == "GameObjectStructure") ; don't arrayString gameObjects (recursion) ; TODO: Base on exclusion list rather than based on addon that might not be used.
+            return
         itemCount := array1.Count()
         var := "[ "
         loop, %itemCount%
         {
-            if IsObject(array1[A_Index])
+            if (IsObject(array1[A_Index]))
                   var .= this.GetAlphaNumericArrayString(array1[A_Index]) . "] "
             if ( A_Index < itemCount )
             var .= array1[A_Index] . ", "

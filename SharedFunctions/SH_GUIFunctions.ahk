@@ -212,7 +212,7 @@ class GUIFunctions
             textType := "DefaultTextColor"
         ; if number, convert to hex
         textColor := (this.CurrentTheme[textType] * 1 == "") ? this.CurrentTheme[textType] : Format("{:#x}", this.CurrentTheme[textType])
-        Gui, %guiName%:Font, c%textColor% w%weight%
+        Gui, %guiName%:Font, c%textColor% w%weight% s%g_GlobalFontSize%
     }
 
     ; Sets the script GUI background color based on the theme.

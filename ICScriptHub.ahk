@@ -82,6 +82,8 @@ if ( g_UserSettings[ "TabControlHeight" ] == "" )
     g_UserSettings[ "TabControlHeight" ] := 700
 if ( g_UserSettings[ "TabControlWidth" ] == "" )
     g_UserSettings[ "TabControlWidth" ] := 430
+if ( g_UserSettings[ "FontSize" ] == "" )
+    g_UserSettings[ "FontSize" ] := 9
 if ( g_UserSettings[ "CheckForUpdates" ] == "" )
 {
     g_UserSettings[ "CheckForUpdates" ] := 1
@@ -94,6 +96,7 @@ if(g_UserSettings[ "WriteSettings" ] == true)
 }
 global g_TabControlHeight := g_UserSettings[ "TabControlHeight" ]
 global g_TabControlWidth := g_UserSettings[ "TabControlWidth" ]
+global g_GlobalFontSize := g_UserSettings[ "FontSize" ]
 global g_SF := new SH_SharedFunctions ; includes MemoryFunctions in g_SF.Memory
 
 ;define a new gui with tabs and buttons

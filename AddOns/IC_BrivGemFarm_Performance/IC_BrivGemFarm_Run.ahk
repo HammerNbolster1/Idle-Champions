@@ -59,6 +59,7 @@ If !IsObject( g_UserSettings )
     g_SF.WriteObjectToJSON( A_LineFile . "\..\..\..\Settings.json", g_UserSettings )
 }
 
+global g_GlobalFontSize := g_UserSettings[ "FontSize" ]
 global isAdvancedBrivSettings := false
 try
 {

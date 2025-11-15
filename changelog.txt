@@ -1,3 +1,13 @@
+November 15, 2025
+    Fixed logic error in checking for EGS for EngineSettings.
+    Fixed mikebaldi references.
+    Added a reverse order function to ArrFnc.
+    Fixed bug where blank variable being copied in cloning process.
+    Fixed a possible recursion error location.
+    Added new Imports and AreaHasArmoredEnemy and GetActiveEnemies to memory functions.
+    Added FontSize to the possible settings in IC Script Hub's settings.json for the oldies.
+    
+
 November 10, 2025
     Fixed button locations in addon management.
     Added the "LoadAfter" addons to the addon info section.

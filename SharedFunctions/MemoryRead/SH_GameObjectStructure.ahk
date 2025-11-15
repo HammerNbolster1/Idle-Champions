@@ -326,7 +326,6 @@ class GameObjectStructure
     ; Creates a gameobject at key, updates its offsets, copies the other values in the object to key object, propagates changes down chain of objects under key. 
     UpdateCollectionOffsets(key, collectionEntriesOffset, offset)
     {
-        this[key] := ""
         this[key] := this.StableClone()
         this[key].IsAddedIndex := true
         if (this._ArrayDimensions)
