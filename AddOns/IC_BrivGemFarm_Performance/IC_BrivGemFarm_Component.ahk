@@ -55,7 +55,9 @@ Gui, ICScriptHub:Add, Text, x+1 gBriv_Visit_Byteglow_Speed_Link, % ")"
 GuiControlGet, xyVal, ICScriptHub:Pos, BrivGemFarmTargetHasteGroupBox
 xyValX += 0
 xyValY += 55
-xyValH := (g_GlobalFontSize ** 1.0677) * 20.5 ; 1.0677 = approximate rate of growth of font sizes. 20.5 is default group box size (205) / default font size (10) to get "slices"
+if g_GlobalFontSize is number
+    xyValH := (g_GlobalFontSize ** 1.0677) * 20.5 ; 1.0677 = approximate rate of growth of font sizes. 20.5 is default group box size (205) / default font size (10) to get "slices"
+
 GUIFunctions.UseThemeTextColor("DefaultTextColor")
 Gui, ICScriptHub:Add, GroupBox, Section w400 h%xyValH% x%xyValX% y%xyValY% vBrivGemFarmChestBuyGroupBox, Options for buying and opening chests during offline stacking.
 Gui, ICScriptHub:Add, Text, x+15 y+-30 w240 h30 vgBriv_Button_Status,

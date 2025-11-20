@@ -70,7 +70,7 @@ class IC_MemoryFunctions_Class
 
     ;Updates installed after the date of this script may result in the pointer addresses no longer being accurate.
     GetVersion(){
-        return "v2.5.11, 2025-11-11"
+        return "v2.6.0, 2025-11-19"
     }
 
     GetPointersVersion(){
@@ -81,7 +81,7 @@ class IC_MemoryFunctions_Class
     ;You only need to do this once. But if the process closes/restarts, then you will need to perform this step again. Refer to the notes section below.
     ;Also, if the target process is running as admin, then the script will also require admin rights!
     ;Automatically selects offsets used depending on if process is 64bit or not (epic or steam)
-    OpenProcessReader(){
+    OpenProcessReader(doResetUnstableCollections := True){
         global g_UserSettings
         _MemoryManager.exeName := g_UserSettings[ "ExeName" ]
         Critical, On
@@ -96,6 +96,15 @@ class IC_MemoryFunctions_Class
         this.EngineSettings.Refresh()
         this.CrusadersGameDataSet.Refresh()
         this.DialogManager.Refresh()
+        if(doResetUnstableCollections)
+        {
+            this.GameManager.ResetUnstableCollectionsOnly()
+            this.GameSettings.ResetUnstableCollectionsOnly()
+            this.EngineSettings.ResetUnstableCollectionsOnly()
+            this.CrusadersGameDataSet.ResetUnstableCollectionsOnly()
+            this.DialogManager.ResetUnstableCollectionsOnly()
+            this.ActiveEffectKeyHandler.ResetUnstableCollectionsOnly()
+        }
         ; this.UserStatHandler.Refresh()
         ; this.UserData.Refresh()
         this.ActiveEffectKeyHandler.Refresh()

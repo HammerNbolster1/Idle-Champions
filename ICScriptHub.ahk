@@ -83,7 +83,10 @@ if ( g_UserSettings[ "TabControlHeight" ] == "" )
 if ( g_UserSettings[ "TabControlWidth" ] == "" )
     g_UserSettings[ "TabControlWidth" ] := 430
 if ( g_UserSettings[ "FontSize" ] == "" )
-    g_UserSettings[ "FontSize" ] := 9
+{
+    g_UserSettings[ "FontSize" ] := 8
+    g_UserSettings[ "WriteSettings" ] := true
+}
 if ( g_UserSettings[ "CheckForUpdates" ] == "" )
 {
     g_UserSettings[ "CheckForUpdates" ] := 1

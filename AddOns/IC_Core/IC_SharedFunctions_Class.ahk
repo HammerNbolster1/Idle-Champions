@@ -851,6 +851,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         static safetyCheckStartTime := 0
         static safetyCheckTimeout := 900000 ; 15 minutes
         static hasCorrectPatron := True
+        static failures := 0
         
         ; Base case check in case safety check never succeeds in opening the game.
         if(!hasStartedSafetyCheck)
@@ -860,8 +861,10 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         }
         else if (A_TickCount - safetyCheckStartTime > safetyCheckTimeout)
         {
-            MsgBox, % "Still could not start game after " . safetyCheckTimeout / 1000 / 60 . "minutes. `nCheck game location settings. `nEnding run."
-            ExitApp
+            failures += 1 ; tally how many 15 minute failures occurred.
+            safetyCheckStartTime := A_TickCount
+            ; MsgBox, % "Still could not start game after " . safetyCheckTimeout / 1000 / 60 . "minutes. `nCheck game location settings. `nEnding run."
+            ; ExitApp
         }
 
         if (Not WinExist( "ahk_exe " . g_userSettings[ "ExeName"] ))

@@ -461,7 +461,8 @@ class IC_BrivGemFarm_Stats_Component
                 GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
         }
         GuiControl, ICScriptHub:, TotalRunCountID, % this.DecideScientific(this.TotalRunCount)
-        GuiControl, ICScriptHub:, GemsTotalID, % this.DecideScientific(this.GemsTotal)
+        if(this.GemsTotal != "")
+            GuiControl, ICScriptHub:, GemsTotalID, % this.DecideScientific(this.GemsTotal)
 
         if (IsObject(this.SharedRunData))
         {

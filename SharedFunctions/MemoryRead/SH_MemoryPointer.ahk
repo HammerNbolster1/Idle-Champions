@@ -79,4 +79,19 @@ class SH_MemoryPointer
                 v.BuildNames(This.Base.Base.__Class . ".")
         }
     }
+
+    Refresh() { ; Scaffolding
+    }
+
+    ResetUnstableCollectionsOnly()
+    {
+        for k,v in this
+        {
+            if(!IsObject(v) OR !ObjGetBase(v).__Class == "GameObjectStructure" OR k == "BasePtr")
+                continue
+            else
+                this[k].ResetUnstableCollectionsOnly()
+        }
+    }
+
 }

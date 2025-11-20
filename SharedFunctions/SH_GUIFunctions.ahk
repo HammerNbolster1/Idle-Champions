@@ -207,12 +207,16 @@ class GUIFunctions
     ; Sets the color/weight for subsequent text based on the theme.
     UseThemeTextColor(textType := "default", weight := 400)
     {  
+        global g_GlobalFontSize
         guiName := this.GUIName
         if(textType == "default")
             textType := "DefaultTextColor"
         ; if number, convert to hex
         textColor := (this.CurrentTheme[textType] * 1 == "") ? this.CurrentTheme[textType] : Format("{:#x}", this.CurrentTheme[textType])
-        Gui, %guiName%:Font, c%textColor% w%weight% s%g_GlobalFontSize%
+        if(g_GlobalFontSize != "")
+            Gui, %guiName%:Font, c%textColor% w%weight% s%g_GlobalFontSize%
+        else
+            Gui, %guiName%:Font, c%textColor% w%weight%
     }
 
     ; Sets the script GUI background color based on the theme.
