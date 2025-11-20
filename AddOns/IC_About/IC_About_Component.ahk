@@ -94,6 +94,8 @@ class IC_About_Component
             gameLocationString .= """legendary.exe"" (Legendary)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "legendary "))
             gameLocationString .= """legendary "" (Legendary)"
+        else if(InStr(g_UserSettings[ "InstallPath" ], "Rare.exe"))
+            gameLocationString .= """legendary.exe"" (Rare)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "heroic://"))
             gameLocationString .= """heroic://"" (Heroic)"
         else if(InStr(g_UserSettings[ "InstallPath" ], "IdleDragons.exe"))
