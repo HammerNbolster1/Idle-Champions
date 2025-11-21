@@ -92,7 +92,6 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
                 shinies += 1
                 g_SharedData.ShiniesByChamp[v.hero_id] := (g_SharedData.ShiniesByChamp[v.hero_id] != "" ? g_SharedData.ShiniesByChamp[v.hero_id] : {})
                 g_SharedData.ShiniesByChamp[v.hero_id][v.slot_id] := ((g_SharedData.ShiniesByChamp[v.hero_id][v.slot_id] != "") ? (g_SharedData.ShiniesByChamp[v.hero_id][v.slot_id] + 1) : 1)
-                ;string := "New shiny! Champ ID: " . v.hero_id . " (Slot " . v.slot_id . ")`n"
             }
         }
         g_SharedData.ShiniesByChampJson := JSON.Stringify(g_SharedData.ShiniesByChamp)

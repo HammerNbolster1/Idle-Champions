@@ -201,7 +201,7 @@ class GUIFunctions
     ; Clears value from hwnd passed.
     ClearValueOfControl(hwnd)
     {
-         GuiControl, ICScriptHub:, %hwnd%, % ""
+        GuiControl, ICScriptHub:, %hwnd%, % ""
     }
 
     ; Sets the color/weight for subsequent text based on the theme.
