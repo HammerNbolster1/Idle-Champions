@@ -484,7 +484,6 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     RestartAdventure( reason := "" )
     {
             targetStackModifier := g_SF.CalculateBrivStacksToReachNextModronResetZone()
-            this.StackNormal(30000, targetStackModifier, forceStack := True) ; Give 30s max to try to gain some stacks before a forced reset.
             g_SharedData.LoopString := "ServerCall: Restarting adventure"
             this.CloseIC( reason )
             g_ServerCall.CallEndAdventure()
@@ -590,7 +589,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     {
         if(!settings[ "FeatSwapEnabled" ])
             ;bench briv if jump animation override is added to list and it isn't a quick transition (reading ReadFormationTransitionDir makes sure QT isn't read too early)
-            if (this.Memory.ReadTransitionOverrideSize() == 1 AND this.Memory.ReadTransitionDirection() != 2 AND this.Memory.ReadFormationTransitionDir() >= 3 )
+            if (this.Memory.ReadTransitionDirection() != 2 AND this.Memory.ReadFormationTransitionDir() >= 3 )
                 return true
         ;bench briv not in a preferred briv jump zone
         if (settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50) ] == 0)
