@@ -1062,7 +1062,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         return true
     }
 
-    ; Returns true if all champs in the formation are in the favorite formation. Does not need exact match.
+    ; Returns true if all champs in the formation are in the test formation. Does not need exact match. "favorite" largely ignored - only to specifically ignore tatyana in formation 2.
     IsCurrentFormationLazy(testformation := "", favorite := "")
     {
         if(!IsObject(testFormation))
