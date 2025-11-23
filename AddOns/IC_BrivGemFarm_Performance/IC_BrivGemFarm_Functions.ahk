@@ -397,6 +397,12 @@ class IC_BrivGemFarm_Class
         g_SharedData.LoopString := "Switching to stack farm formation."
         if (!this.BossKillAttempt AND !g_SF.KillCurrentBoss() ) ; Previously/Alternatively FallBackFromBossZone()
             this.BossKillAttempt := True, g_SF.FallBackFromBossZone() ; Boss kill Timeout
+        stackFormation := g_SF.Memory.GetFormationByFavorite(2)
+        sTimer := new SH_SharedTimers()
+        while(g_SF.Memory.ReadClickLevel() < g_SF.Memory.ReadCurrentZone() and !sTimer.isTimeUp(3000))
+            g_SF.DirectedInput(,, this.ClickSpam )
+        this.LockLevelUp := False ; Allow leveling starting at 0 again for stacking champions.
+        this.DoBasicLeveling(g_SF.GetFormationFKeys(stackFormation))
         inputValues := "{w}" ; Stack farm formation hotkey
         g_SF.DirectedInput(,, inputValues )
         g_SF.WaitForTransition( inputValues )
@@ -406,7 +412,6 @@ class IC_BrivGemFarm_Class
         counter := 0
         sleepTime := 60
         g_SharedData.LoopString := "Setting stack farm formation."
-        stackFormation := g_SF.Memory.GetFormationByFavorite(2)
         isFormation2 := g_SF.Memory.ReadMostRecentFormationFavorite() == 2 AND IC_BrivGemFarm_Class.BrivFunctions.HasSwappedFavoritesThisRun
         if (!isFormation2)
             if(g_SF.IsCurrentFormationLazy(stackFormation, 2))
