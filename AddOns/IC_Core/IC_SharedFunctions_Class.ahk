@@ -554,7 +554,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     {
         if(!settings[ "FeatSwapEnabled" ])
             ;bench briv if jump animation override is added to list and it isn't a quick transition (reading ReadFormationTransitionDir makes sure QT isn't read too early)
-            if (this.Memory.ReadTransitionDirection() != 2 AND this.Memory.ReadFormationTransitionDir() >= 3 )
+            if (this.Memory.ReadTransitionDirection() != 0 AND this.Memory.ReadFormationTransitionDir() >= 4 )
                 return true
         ;bench briv not in a preferred briv jump zone
         if (settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50) ] == 0)
