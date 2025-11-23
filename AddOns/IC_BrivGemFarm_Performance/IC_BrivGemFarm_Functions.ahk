@@ -662,41 +662,6 @@ class IC_BrivGemFarm_Class
         g_SF.ToggleAutoProgress( 1, false, true )
     }
 
-    DoLevelingUntilNotEnoughGold(formationValue := "M")
-    {
-        sleepTime := 1 ; default 80
-        keyspamLength := 2 ; default keys not including clickdmg
-        currKeySpam := []
-        if(formationvalue != "M")
-            keyspam := g_SF.GetFormationFKeys(this.Memory.GetFormationByFavorite(formationValue))
-        else
-            keyspam := this.keyspam
-        currKeySpam := keyspam.Clone()
-        index := 1
-        timeoutTimer := new SH_SharedTimers()
-        while(currKeyspam.Length() > 0 AND !timeoutTimer.IsTimeUp(30000))
-        {
-            keySpam := currKeySpam.Clone()
-            for k,hotKeyVal in keySpam
-            {
-                ; extract fkey number, check champ in seat of number, check if it can afford to upgrade - if yes add to spam
-                seat:= SubStr(hotKeyVal, 3, -1)
-                
-                if(currKeyspam.Length() > 0 AND this.CanAffordUpgrade(g_SF.Memory.ReadSelectedChampIDBySeat( seat )))
-                {
-                    g_SF.DirectedInput(,,hotKeyVal)
-                    if(g_SF.ReadcurrentZone() <= (g_SF.ReadcurrentZone()))
-                        g_SF.DirectedInput(,,this.ClickSpam)
-                    Sleep, %sleepTime%
-                }
-                if(g_SF.Memory.ReadBoughtLastUpgradeBySeat( seat ))
-                    currKeySpam.Remove(k)
-            }
-            if(g_SF.ReadClickLevel() <= g_SF.ReadcurrentZone())
-                g_SF.DirectedInput(,,this.ClickSpam)
-        }
-    }
-
     DoZ1Setup()
     {
         this.SetFormationForStart()
