@@ -397,41 +397,6 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         Critical, Off
     }
 
-    DoLevelingUntilNotEnoughGold(formationValue := "M")
-    {
-        sleepTime := 80 ; default 80
-        keyspamLength := 2 ; default keys not including clickdmg
-        
-        currKeySpam := []
-        if(formationvalue != "M")
-            keyspam := g_SF.GetFormationFKeys(this.Memory.GetFormationByFavorite(formationValue))
-        else
-            keyspam := this.keyspam
-        currKeySpam.Push(this.keyspam[this.keyspam.Length()]) ; add last key to currKeySpam to start while loop
-        while (currKeyspam.Length() > 0 AND currKeyspam.Length() <= 3)
-        {
-            currKeySpam := []
-            keyspamLength := Min(keyspam.Length(), 3)
-            index := 1
-            while(currKeyspam.Length() < keySpamLength)
-            {
-                ; extract fkey number, check champ in seat of number, check if it can afford to upgrade - if yes add to spam
-                if(this.CanAffordUpgrade(g_SF.Memory.ReadSelectedChampIDBySeat(SubStr(keyspam[index], 3, -1))))
-                    index := index + 1, currKeySpam.Push(keyspam[index - 1]) ; increment index but add index from before increment
-                else
-                    keyspam.RemoveAt(index)
-            }
-            if(currKeyspam.Length() > 0)
-            {
-                currKeySpam.Push("{ClickDmg}")
-                g_SF.DirectedInput(,,currKeySpam*)
-                Sleep, %sleepTime%
-            }
-            else
-                break
-        }
-    }
-
     ;A test if stuck on current area. After 35s, toggles autoprogress every 5s. After 45s, attempts falling back up to 2 times. After 65s, restarts level.
     CheckifStuck(isStuck := false)
     {
