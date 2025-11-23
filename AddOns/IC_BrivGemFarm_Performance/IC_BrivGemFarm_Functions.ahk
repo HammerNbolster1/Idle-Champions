@@ -664,7 +664,7 @@ class IC_BrivGemFarm_Class
             g_SF.DoRushWait()
         if (g_SF.ShouldDashWait())
             g_SF.DoDashWait( Max(g_SF.ModronResetZone - g_BrivUserSettings[ "DashWaitBuffer" ], 0) )
-        g_SF.ToggleAutoProgress( 1, false, true )
+        g_SF.ToggleAutoProgress( 1, false, false )
     }
 
     DoZ1Setup()
