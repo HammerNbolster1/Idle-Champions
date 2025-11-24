@@ -1,3 +1,11 @@
+November 23, 2025
+    Fixed BPH disappearing when doing game restarts (e.g. FORT restart).
+    Fixed GUI elements in parts of BrivGemFarm.
+    Added test for using Rare (i.e. instead of Legendary/EGS)
+    Updated Steam v637 Imports.
+    Made BrivGemFarm minimally functional again. (BrivGemFarm should no longer NEED levelup to run anymore but it is still very highly recommended.)
+    Fixed QT transition detection. 
+
 November 19, 2025
     Added checks for g_GlobalFontSize to prevent possible errors
     Save default font size value if none exists (8).

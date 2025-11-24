@@ -44,9 +44,9 @@ class IC_BrivGemFarm_Component_StackAndStop_Added_Class
 class IC_BrivGemFarm_StackAndStop_Class extends IC_BrivGemFarm_Class
 {
     ; Enables featswap after other setup settings
-    StackNormal()
+    StackNormal(maxOnlineStackTime := 150000, targetStacks := 0, forceStack := False)
     {
-        base.StackNormal()
+        base.StackNormal(maxOnlineStackTime, targetStacks, forceStack)
         g_SF.ToggleAutoProgress( 0, false, true )
         g_SF.FallBackFromZone()
         ExitApp

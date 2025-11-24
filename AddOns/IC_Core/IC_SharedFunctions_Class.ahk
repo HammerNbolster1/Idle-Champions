@@ -63,7 +63,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     ; returns this class's version information (string)
     GetVersion()
     {
-        return "v3.0.9, 2025-11-03"
+        return "v3.1.0, 2025-11-23"
     }
 
     ;Takes input of first and second sets of eight byte int64s that make up a quad in memory. Obviously will not work if quad value exceeds double max.
@@ -397,41 +397,6 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         Critical, Off
     }
 
-    DoLevelingUntilNotEnoughGold(formationValue := "M")
-    {
-        sleepTime := 80 ; default 80
-        keyspamLength := 2 ; default keys not including clickdmg
-        
-        currKeySpam := []
-        if(formationvalue != "M")
-            keyspam := g_SF.GetFormationFKeys(this.Memory.GetFormationByFavorite(formationValue))
-        else
-            keyspam := this.keyspam
-        currKeySpam.Push(this.keyspam[this.keyspam.Length()]) ; add last key to currKeySpam to start while loop
-        while (currKeyspam.Length() > 0 AND currKeyspam.Length() <= 3)
-        {
-            currKeySpam := []
-            keyspamLength := Min(keyspam.Length(), 3)
-            index := 1
-            while(currKeyspam.Length() < keySpamLength)
-            {
-                ; extract fkey number, check champ in seat of number, check if it can afford to upgrade - if yes add to spam
-                if(this.CanAffordUpgrade(g_SF.Memory.ReadSelectedChampIDBySeat(SubStr(keyspam[index], 3, -1))))
-                    index := index + 1, currKeySpam.Push(keyspam[index - 1]) ; increment index but add index from before increment
-                else
-                    keyspam.RemoveAt(index)
-            }
-            if(currKeyspam.Length() > 0)
-            {
-                currKeySpam.Push("{ClickDmg}")
-                g_SF.DirectedInput(,,currKeySpam*)
-                Sleep, %sleepTime%
-            }
-            else
-                break
-        }
-    }
-
     ;A test if stuck on current area. After 35s, toggles autoprogress every 5s. After 45s, attempts falling back up to 2 times. After 65s, restarts level.
     CheckifStuck(isStuck := false)
     {
@@ -484,7 +449,6 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     RestartAdventure( reason := "" )
     {
             targetStackModifier := g_SF.CalculateBrivStacksToReachNextModronResetZone()
-            this.StackNormal(30000, targetStackModifier, forceStack := True) ; Give 30s max to try to gain some stacks before a forced reset.
             g_SharedData.LoopString := "ServerCall: Restarting adventure"
             this.CloseIC( reason )
             g_ServerCall.CallEndAdventure()
@@ -590,7 +554,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     {
         if(!settings[ "FeatSwapEnabled" ])
             ;bench briv if jump animation override is added to list and it isn't a quick transition (reading ReadFormationTransitionDir makes sure QT isn't read too early)
-            if (this.Memory.ReadTransitionOverrideSize() == 1 AND this.Memory.ReadTransitionDirection() != 2 AND this.Memory.ReadFormationTransitionDir() >= 3 )
+            if (this.Memory.ReadTransitionDirection() != 0 AND this.Memory.ReadFormationTransitionDir() >= 4 )
                 return true
         ;bench briv not in a preferred briv jump zone
         if (settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50) ] == 0)
@@ -1063,7 +1027,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         return true
     }
 
-    ; Returns true if all champs in the formation are in the favorite formation. Does not need exact match.
+    ; Returns true if all champs in the formation are in the test formation. Does not need exact match. "favorite" largely ignored - only to specifically ignore tatyana in formation 2.
     IsCurrentFormationLazy(testformation := "", favorite := "")
     {
         if(!IsObject(testFormation))

@@ -239,6 +239,7 @@ class IC_BrivSharedFunctions_Added_Class extends IC_SharedFunctions_Class
         StartTime := A_TickCount
         ElapsedTime := 0
         timeout := 8000 ; 8s seconds
+        timescale := this.Memory.ReadTimeScaleMultiplier()
         estimate := (timeout / timeScale)
         ; Loop escape conditions:
         ;   does full timeout duration

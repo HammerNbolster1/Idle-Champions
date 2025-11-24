@@ -56,13 +56,12 @@ class GUIFunctions
     GetToolTipTarget(controlVariableName)
     {
         global
-        WinGet ICScriptHub_ID, ID, A
         GuiControl ICScriptHub:Focus, %controlVariableName%
+        WinGet ICScriptHub_ID, ID, A
         ControlGetFocus toolTipTarget, ahk_id %ICScriptHub_ID%
         return ICScriptHub_ID . toolTipTarget
     }
-
-     
+   
     ; Filters a combo box's list based on what is in the edit box. _List must be an unaltered original combobox list.
     FilterList(controlID, _List)
     {

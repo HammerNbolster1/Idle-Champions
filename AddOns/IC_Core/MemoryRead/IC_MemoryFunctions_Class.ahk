@@ -240,12 +240,14 @@ class IC_MemoryFunctions_Class
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.areaTransitioner.ScreenWipeEffect.DelayTimer.T.Read()
     }
 
-    ; 0 = right, 1 = left, 2 = static (instant)
+    ; 0 = right, 1 = left, 2 = static (instant) (old)
+    ; 0 = static (instant), 1 = right, 2 = left, 3 = JumpDown, 4 = FallDown (new)
     ReadTransitionDirection(){
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.areaTransitioner.transitionDirection.Read()
     }
 
-    ; 0 = OnFromLeft, 1 = OnFromRight, 2 = OffToLeft, 3 = OffToRight
+    ; 0 = OnFromLeft, 1 = OnFromRight, 2 = OffToLeft, 3 = OffToRight (old)
+    ; 0 = OnFromLeft, 1 = OnFromRight, 2 = OnFromTop, 3 = OffToLeft, 4 = OffToRight, 5 = OffToBottom (new)
     ReadFormationTransitionDir(){
         return this.GameManager.game.gameInstances[this.GameInstance].Controller.formation.transitionDir.Read()
     }

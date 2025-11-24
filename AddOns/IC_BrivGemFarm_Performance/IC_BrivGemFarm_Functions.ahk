@@ -18,6 +18,40 @@ class IC_BrivGemFarm_Class
     previousSilverChestCount := 0
     previousGoldChestCount := 0
     DoneLeveling := False
+    ClickSpam := "{ClickDmg}"
+    LockLevelUp := False
+
+    InitChamps()
+    {
+        this.ChampIDs := {}
+        this.ChampIDs[Briv := "58"] := 58 ; must be in quotes so object is treated as dict and not an array that will modify keys.
+        this.ChampIDs[Widdle := 91] := 91
+        this.ChampIDs[Ellywick := 83] := 83
+        this.ChampIDs[HewMaan := 75] := 75
+        this.ChampIDs[Tatyana := 97] := 97
+        this.ChampIDs[Melf := 59] := 59
+        this.ChampIDs[Dynaheir := 145] := 145
+        this.ChampIDs[Diana := 148] := 148
+        this.ChampIDs[BBEG := 125] := 125
+        this.ChampIDs[Dungeon_Master := 99] := 99
+        this.ChampIDs[Imoen := 117] := 117
+        this.ChampIDs[Laezel := 128] := 128
+        this.ChampIDs[Deekin := 28] := 28
+        this.ChampIDs[Virgil := 115] := 115
+        this.ChampIDs[Sentry := 52] := 52
+        this.ChampIDs[Nahara := 102] := 102
+        this.ChampIDs[Dhani := 89] := 89
+        this.ChampIDs[Kent := 114] := 114
+        this.ChampIDs[Gazrick := 98] := 98
+        this.ChampIDs[Alyndra := 79] := 79
+        this.ChampIDs[Selise := 81] := 81
+        this.ChampIDs[Vi := 95] := 95
+        this.ChampIDs[Havilar := 56] := 56
+        this.ChampIDs[Shandie := 47] := 47
+        this.ChampIDs[Minsc := 7] := 7
+        this.ChampIDs[Baldric := 165] := 165 
+        this.ChampIDs[Thellora := 139] := 139
+    }
 
     ;=====================================================
     ;Primary Functions for Briv Gem Farm
@@ -30,6 +64,7 @@ class IC_BrivGemFarm_Class
             g_ScriptHubComs.RunTimersOnGemFarmStart()
         if (errLevel < 0)
             return errLevel
+        this.InitChamps()            
         this.FormationModron := formationModron := g_SF.Memory.GetActiveModronFormation()
         loop
         {
@@ -110,13 +145,14 @@ class IC_BrivGemFarm_Class
         g_PreviousZoneStartTime := A_TickCount
         g_SF.ToggleAutoProgress( 0, false, true )
         g_SharedData.StackFail := this.CheckForFailedConv()
-        g_SF.keyspam := Array()
+        this.keyspam := Array()
         g_SF.Memory.ActiveEffectKeyHandler.Refresh()
         ; Don't reset last stack success area if 3 or more runs have failed to stack.
         this.LastStackSuccessArea := this.StackFailAreasTally[g_BrivUserSettings[ "StackZone" ]] < this.MaxStackRestartFails ? g_BrivUserSettings[ "StackZone" ] : this.LastStackSuccessArea
         this.StackFailAreasThisRunTally := {}
         this.StackFailRetryAttempt := 0
         this.DoneLeveling := False
+        this.LockLevelUp := False
         g_SF.FormationLevelingLock := False
         g_SF.AlreadyOfflineStackedThisRun := false
         g_SharedData.BossesHitThisRun := 0
@@ -133,9 +169,8 @@ class IC_BrivGemFarm_Class
         {
             g_SF.WaitForFirstGoldSetup()
             if g_BrivUserSettings[ "Fkeys" ]
-                g_SF.keyspam := g_SF.GetFormationFKeys(formationModron)
+                this.keyspam := g_SF.GetFormationFKeys(formationModron)
             this.DoKeySpam := true
-            this.keyspam.Push("{ClickDmg}")
             this.DoPartySetup(formationModron)
         }
         else
@@ -153,7 +188,7 @@ class IC_BrivGemFarm_Class
         if (this.DoKeySpam AND g_BrivUserSettings[ "Fkeys" ] AND g_SF.AreChampionsUpgraded(formationModron)) 
         { ; leveling completed, remove champs from keyspam.
             g_SF.DirectedInput(hold:=0,release:=1, this.keyspam) ;keysup
-            ; g_SF.keyspam := ["{ClickDmg}"]
+            g_SF.DirectedInput(hold:=0,release:=1, this.ClickSpam) ;click key up
             this.DoKeySpam := false
         }
         g_SF.InitZone( this.keyspam )
@@ -185,44 +220,44 @@ class IC_BrivGemFarm_Class
     GemFarmDoNonModronActions(currentZone := "")
     {
 
+        static clickBonusAmount := 100
         ; static lastZone := 0
         if(this.DoneLeveling)
             return
-        currKeySpam := []
         ; this.Memory.ReadHeroUpgradeRequiredLevelByIndex(champID, A_Index - 1) ;bugfix ReadHeroUpgradesSize
         keyspam := g_SF.GetFormationFKeys(g_SF.Memory.GetFormationByFavorite(g_SF.Memory.ReadMostRecentFormationFavorite()))
         if(keyspam.Length() > 0)
-        {
-            keyspamLength := Min(keyspam.Length(), 3)
-            index := 1
-            index2 := 1
-            loop %keyspamLength%
-            {
-                ; extract fkey number, check champ in seat of number, check if it can afford to upgrade - if yes add to spam
-                seatID := SubStr(keyspam[index], 3, -1)
-                champID := g_SF.Memory.ReadSelectedChampIDBySeat(seatID)
-                if(this.CanAffordUpgrade(champID) AND !g_SF.Memory.ReadBoughtLastUpgradeBySeat(seatID))
-                {
-                    if(!g_SF.Memory.DoesChampHavePurchasedWithoutUpgraded(champID))
-                    ; if(!(g_SF.Memory.ReadChampLvlByID(champID) > (g_SF.Memory.GetHighestLevelRequiredForUpgradesByChampID(champID)) + 100))
-                        index := index + 1, currKeySpam.Push(keyspam[index - 1]) ; increment index but add index from before increment
-                }
-                else
-                    keyspam.RemoveAt(index)
-                if (currKeySpam.Length() > keyspamLength)
-                    break
-            }
-            if(currKeyspam.Length() > 0)
-            {
-                ; TODO: Handle clicks without directed input w/ champs
-                currKeySpam.Push("{ClickDmg}")
-                g_SF.DirectedInput(,,currKeySpam*)
-                Sleep, %sleepTime%
-            }
-        }
+            this.DoBasicLeveling(keyspam)
         else
-            this.DoneLeveling := True, currKeySpam.Push("{ClickDmg}")
-        g_SF.DirectedInput(currKeySpam*)
+            this.DoneLeveling := True
+        g_SF.DirectedInput(,,currKeySpam*)
+        if(g_SF.Memory.ReadClickLevel() <= (g_SF.Memory.ReadcurrentZone() + clickBonusAmount))
+            g_SF.DirectedInput(,,this.ClickSpam)
+    }
+
+    DoBasicLeveling(keyspam := "")
+    {
+        currKeySpam := []
+        for k,hotkeyVal in keyspam
+        {
+            ; extract fkey number, check champ in seat of number, check if it can afford to upgrade - if yes add to spam
+            seatID := SubStr(hotkeyVal, 3, -1)
+            champID := g_SF.Memory.ReadSelectedChampIDBySeat(seatID)
+            if(!this.LockLevelUp)
+                g_SF.DirectedInput(,,hotkeyVal)
+            if(!g_SF.Memory.ReadBoughtLastUpgradeBySeat(seatID))
+                if(this.CanAffordUpgrade(champID))
+                    if(!g_SF.Memory.DoesChampHavePurchasedWithoutUpgraded(champID))
+                        currKeySpam.Push(hotkeyVal) ; increment index but add index from before increment
+        }
+        this.LockLevelUp := True
+        if(currKeyspam.Length() > 0)
+        {
+            g_SF.DirectedInput(,,currKeySpam*)
+            if(g_SF.ReadClickLevel() <= (g_SF.ReadcurrentZone() + clickBonusAmount))
+                g_SF.DirectedInput(,,this.ClickSpam)
+            Sleep, %sleepTime%
+        }
     }
 
     CanAffordUpgrade(champID)
@@ -362,6 +397,12 @@ class IC_BrivGemFarm_Class
         g_SharedData.LoopString := "Switching to stack farm formation."
         if (!this.BossKillAttempt AND !g_SF.KillCurrentBoss() ) ; Previously/Alternatively FallBackFromBossZone()
             this.BossKillAttempt := True, g_SF.FallBackFromBossZone() ; Boss kill Timeout
+        stackFormation := g_SF.Memory.GetFormationByFavorite(2)
+        sTimer := new SH_SharedTimers()
+        while(g_SF.Memory.ReadClickLevel() < g_SF.Memory.ReadCurrentZone() and !sTimer.isTimeUp(3000))
+            g_SF.DirectedInput(,, this.ClickSpam )
+        this.LockLevelUp := False ; Allow leveling starting at 0 again for stacking champions.
+        this.DoBasicLeveling(g_SF.GetFormationFKeys(stackFormation))
         inputValues := "{w}" ; Stack farm formation hotkey
         g_SF.DirectedInput(,, inputValues )
         g_SF.WaitForTransition( inputValues )
@@ -371,7 +412,6 @@ class IC_BrivGemFarm_Class
         counter := 0
         sleepTime := 60
         g_SharedData.LoopString := "Setting stack farm formation."
-        stackFormation := g_SF.Memory.GetFormationByFavorite(2)
         isFormation2 := g_SF.Memory.ReadMostRecentFormationFavorite() == 2 AND IC_BrivGemFarm_Class.BrivFunctions.HasSwappedFavoritesThisRun
         if (!isFormation2)
             if(g_SF.IsCurrentFormationLazy(stackFormation, 2))
@@ -507,8 +547,12 @@ class IC_BrivGemFarm_Class
         StartTime := A_TickCount
         ElapsedTime := 0
         g_SharedData.LoopString := "Stack Normal"
+        this.LockLevelUp := False ; Allow leveling starting at 0 again for stacking champions.
+        stackFormation := g_SF.GetFormationFKeys(g_SF.Memory.GetFormationByFavorite(2))
         while ( stacks < targetStacks AND ElapsedTime < maxOnlineStackTime )
         {
+            this.DoBasicLeveling(stackFormation)
+            g_SF.DirectedInput(,,"{w}")
             g_SF.FallBackFromBossZone()
             stacks := this.GetNumStacksFarmed()
             Sleep, 62
@@ -521,9 +565,33 @@ class IC_BrivGemFarm_Class
             g_PreviousZoneStartTime := A_TickCount
             return
         }
+        this.LockLevelUp := False ; Allow leveling starting at 0 again after stacking since DoBasicLeveling locks it after stack formation is leveled.
         g_PreviousZoneStartTime := A_TickCount
         g_SF.FallBackFromZone()
         return
+    }
+
+    ResetToPreviousLootString(returnVal := "")
+    {
+        g_SharedData.LoopString := this.previousLootString
+        return returnVal
+    }
+
+    SetPreviousLootString(returnVal := "")
+    {
+        this.previousLootString := g_SharedData.LoopString
+        return returnVal
+    }
+
+    StripEmptySlotsFrom(formation := "")
+    {
+        strippedFormation := {}
+        for k, heroID in formation
+        {
+            if (heroID > 0)
+                strippedFormation.Push(heroID)
+        }
+        return strippedFormation
     }
 
     ; avoids attempts to stack again after stacking has been completed and level not reset yet.
@@ -591,17 +659,12 @@ class IC_BrivGemFarm_Class
         isHavilarInFormation := g_SF.IsChampInFormation( ActiveEffectKeySharedFunctions.Havilar.HeroID, formationFavorite1 )
         if (isHavilarInFormation)
             g_SF.LevelChampByID( ActiveEffectKeySharedFunctions.Havilar.HeroID, 15, 7000, "{q}") ; level havi
-        if (g_BrivUserSettings[ "Fkeys" ])
-        {
-            g_SF.keyspam := g_SF.GetFormationFKeys(formationModron) ; level other formation champions
-            this.DoLevelingUntilNotEnoughGold("M")
-        }
         g_SF.ModronResetZone := g_SF.Memory.GetModronResetArea() ; once per zone in case user changes it mid run.
         if (g_SF.ShouldRushWait())
             g_SF.DoRushWait()
         if (g_SF.ShouldDashWait())
             g_SF.DoDashWait( Max(g_SF.ModronResetZone - g_BrivUserSettings[ "DashWaitBuffer" ], 0) )
-        g_SF.ToggleAutoProgress( 1, false, true )
+        g_SF.ToggleAutoProgress( 1, false, false )
     }
 
     DoZ1Setup()
