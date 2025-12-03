@@ -34,6 +34,7 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
         this.LoadServerCallSettings()
         this.LoadUserSettings()
         this.LoadGemFarmConnection()
+        this.UpdateDummyData()
     }
 
     ; Load script defined server call Settings into this class.
