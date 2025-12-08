@@ -20,6 +20,10 @@ class IC_BrivGemFarm_Class
     DoneLeveling := False
     ClickSpam := "{ClickDmg}"
     LockLevelUp := False
+	BossZonesThisRun := []
+	JustLeftBoss := false
+	BossZone := 0
+	PreviousZone := 0
 
     InitChamps()
     {
@@ -162,6 +166,9 @@ class IC_BrivGemFarm_Class
         g_SharedData.LowestHasteStacks := lowestHasteStacks := firstRun ? "" : g_SF.Memory.ReadHasteStacks() 
         firstRun := False
         g_SharedData.PlayServer := StrSplit(StrSplit(g_ServerCall.webroot,".")[1], "/")[3]
+		this.BossZonesThisRun := []
+		this.JustLeftBoss := false
+		this.PreviousZone := 0
         ; Do Chests after Reset
         this.CheckAndDoChests()
         
@@ -183,6 +190,12 @@ class IC_BrivGemFarm_Class
 
     GemFarmDoZone(formationModron := "")
     {
+		CurrentZone := g_SF.Memory.ReadCurrentZone()
+		if (this.JustLeftBoss)
+		{
+			this.LogBossZone(this.zoneBefore, this.BossZone, CurrentZone)
+			this.JustLeftBoss := false
+		}
         if (!(Mod( g_SF.Memory.ReadCurrentZone(), 5)) AND !(Mod( g_SF.Memory.ReadHighestZone(), 5)))
             this.GemFarmDoTouchedBoss()
         if (this.DoKeySpam AND g_BrivUserSettings[ "Fkeys" ] AND g_SF.AreChampionsUpgraded(formationModron)) 
@@ -193,14 +206,26 @@ class IC_BrivGemFarm_Class
         }
         g_SF.InitZone( this.keyspam )
         g_SF.ToggleAutoProgress( 1 )
+		this.PreviousZone := CurrentZone
     }
 
     ; If gem farm lands on a boss, do these steps.
-    GemFarmDoTouchedBoss()
-    {
-        g_SharedData.TotalBossesHit++
-        g_SharedData.BossesHitThisRun++
-    }
+	 GemFarmDoTouchedBoss()
+	{
+		CurrentZone := g_SF.Memory.ReadCurrentZone()      
+		this.BossZonesThisRun.Push(CurrentZone)
+		this.zoneBefore := this.PreviousZone
+		this.BossZone := CurrentZone
+		this.JustLeftBoss := true
+		g_SharedData.TotalBossesHit++
+		g_SharedData.BossesHitThisRun++
+	}
+	
+		LogBossZone(previousZone, bossZone, zoneAfter)
+	{
+		FormatTime, timestamp, , dd-MM-yyyy HH:mm:ss
+		FileAppend, %timestamp% - Zone %previousZone% -> Boss %bossZone% -> Zone %zoneAfter%`r`n, BossLog.txt
+	}
 
     ; Do things that are needed after a game reset from being stuck
     GemFarmDoStuckCleanup()
