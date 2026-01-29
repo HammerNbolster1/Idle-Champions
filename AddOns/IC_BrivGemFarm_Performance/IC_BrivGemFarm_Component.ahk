@@ -275,6 +275,13 @@ class IC_BrivGemFarm_Component
         catch err ; otherwise start farm
         {
             ;g_BrivGemFarm.GemFarm()
+            programLoc := g_UserSettings[ "InstallPath" ]
+            if(!FileExist(programLoc))
+            {
+                MsgBox, 48, Unable to launch game, Verify the game location is set properly by enabling the Game Location Settings addon, clicking Change Game Location on the Briv Gem Farm tab, and ensuring the launch command is set properly.
+                return
+            }
+            g_SF.SafetyCheck()
             g_SF.Hwnd := WinExist("ahk_exe " . g_userSettings[ "ExeName"])
             g_SF.Memory.OpenProcessReader()
             scriptLocation := A_LineFile . "\..\IC_BrivGemFarm_Run.ahk"

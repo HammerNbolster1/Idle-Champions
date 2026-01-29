@@ -693,7 +693,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
                 }
                 if(!this.PID) ; Do not keep attempting to launch IC if a retry has also failed.
                 { 
-                    MsgBox, 48, ICScriptHub was unable to re-launch the game. `nVerify the game location is set properly by enabling the Game Location Settings addon, clicking Change Game Location on the Briv Gem Farm tab, and ensuring the launch command is set properly.
+                    MsgBox, 48, Unable to re-launch game, Verify the game location is set properly by enabling the Game Location Settings addon, clicking Change Game Location on the Briv Gem Farm tab, and ensuring the launch command is set properly.
                     ExitApp
                 }
             }

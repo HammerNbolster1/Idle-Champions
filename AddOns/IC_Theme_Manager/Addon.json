@@ -9,10 +9,6 @@
         {
             "Name":"IC Core",
             "Version":"v0.1.0"
-        },
-        {
-            "Name":"Briv Gem Farm",
-            "Version":"v1.3.0"
         }
     ]
 }
