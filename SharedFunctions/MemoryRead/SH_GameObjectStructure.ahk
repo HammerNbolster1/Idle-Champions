@@ -157,7 +157,7 @@ class GameObjectStructure
         else if(this.ValueType == "Dict")
             versionObject.FullOffsets.Push(_MemoryManager.Is64Bit ? 0x4C : 0x0)
         else if(this.ValueType == "SortedDict")
-            sizeObject.FullOffsets.Push(_MemoryManager.Is64Bit ? (0x20, 0x3) : (0x10, 0x1B))
+            sizeObject.FullOffsets.Push(_MemoryManager.Is64Bit ? (0x20, 0x30) : (0x10, 0x1B))
         else if(this.ValueType == "HashSet")
             versionObject.FullOffsets.Push(_MemoryManager.Is64Bit ? 0x104 : 0x0)
         else ; Unsupported ValueType
