@@ -26,9 +26,9 @@ class IC_ServerCalls_Class extends SH_ServerCalls
     userDetails := ""
     activePatronID := 0
     dummyData := ""
-    webRoot := "http://ps22.idlechampions.com/~idledragons/"
+    webRoot := "http://ps28.idlechampions.com/~idledragons/"
     timeoutVal := 60000
-    playServerExcludes := "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"
+    playServerExcludes := "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26"
     settings := ""
     
 
@@ -261,7 +261,7 @@ class IC_ServerCalls_Class extends SH_ServerCalls
         oldWebRoot := this.webRoot
         this.timeoutVal := 1000
         newWebRoot := ""
-        highestPlayServerValue := 23
+        highestPlayServerValue := 30
         fastestProcessingTime := 10000
         Loop, %highestPlayServerValue%
         {
@@ -312,7 +312,7 @@ class IC_ServerCalls_Class extends SH_ServerCalls
         else
         {
             oldWebRoot := this.webRoot
-            this.webRoot := "http://ps23.idlechampions.com/~idledragons/" ; assume ps23 will always be available (avoiding using master)
+            this.webRoot := "http://ps28.idlechampions.com/~idledragons/" ; assume ps28 will always be available (avoiding using master)
             response := this.CallGetPlayServer()
             if (response != "" AND response.play_server != "")
                 this.webRoot := response.play_server
