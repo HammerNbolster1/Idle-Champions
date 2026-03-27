@@ -45,7 +45,7 @@ class IC_BrivSharedFunctions_Class
             g_SharedData.LoopString := "ServerCall: Restarting adventure (no manual stack conv.)"
         ; Restart adventure
         if (!IsObject(jsonObj["Calls"]))
-			jsonObj["Calls"] := []
+            jsonObj["Calls"] := []
         jsonObj["Calls"].Push({"CallCheckClaimable" : [CDP_key]})
         jsonObj["Calls"] := [{"CallEndAdventure" : []}, {"CallLoadAdventure" : [this.CurrentAdventure]}]
         jsonObj["ServerCallGUID"] := ComObjCreate("Scriptlet.TypeLib").GUID
@@ -80,7 +80,10 @@ class IC_BrivSharedFunctions_Class
     ResetServerCall()
     {
         jsonObj := this.SetUserCredentials()
-        g_ServerCall := new IC_BrivServerCall_Class( this.UserID, this.UserHash, this.InstanceID )
+        if (g_ServerCall == "")
+            g_ServerCall := new IC_BrivServerCall_Class(this.UserID, this.UserHash, this.InstanceID)
+        else
+            g_ServerCall.BlankSlate(this.UserID, this.UserHash, this.InstanceID)
         version := this.Memory.ReadBaseGameVersion()
         if (version != "")
             jsonObj.clientVersion := g_ServerCall.clientVersion := version
@@ -109,6 +112,7 @@ class IC_BrivSharedFunctions_Class
     */
     WaitForModronReset( timeout := 75000)
     {
+        timeout := 45000
         StartTime := A_TickCount
         ElapsedTime := 0
         g_SharedData.LoopString := "Modron Resetting..."
@@ -119,6 +123,8 @@ class IC_BrivSharedFunctions_Class
         while (this.Memory.ReadResetting() AND ElapsedTime < timeout)
         {
             ElapsedTime := A_TickCount - StartTime
+            if (this.doesModronResetFailureDialogueExist())
+                return false
             Sleep, 20
         }
         g_SharedData.LoopString := "Loading z1..."
@@ -132,6 +138,20 @@ class IC_BrivSharedFunctions_Class
             return false
         this.AlreadyOfflineStackedThisRun := False
         return true
+    }
+    
+    ; a method to check if a `PrettyMessageBox` with the text `Error: Reset Failed!` exists
+    doesModronResetFailureDialogueExist()
+    {
+        size := g_SF.Memory.DialogManager.dialogs.size.Read()
+        ; sanity check size
+        if (size < 1 || size > 1000)
+            return false
+        ; Modron reset error will always* be last.
+        if (g_SF.Memory.DialogManager.dialogs[size - 1].text.lastSetText.Read() == "Error: Reset failed!")
+            return true
+        return false
+        ; * For variable values of always.
     }
 
     ; Refocuses the window that was recorded as being active before the game window opened.
