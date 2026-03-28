@@ -31,28 +31,28 @@ class IC_ServerCalls_Class extends SH_ServerCalls
     playServerExcludes := "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26"
     settings := ""
     initMaxRetries := 2
+    playServerRegex := "^https?://ps\d+\.idlechampions.com/~idledragons/"
     
 
-    __New( userID := 0, userHash := 0, instanceID := 0, callingFrom := "unknown" )
+    __New( userID := 0, userHash := 0, instanceID := 0)
     {
         this.BlankSlate(userID, userHash, instanceID)
+        ; Step 1: Try memory read.
+        this.webRoot := g_SF.Memory.ReadWebRoot()
+        if (RegExMatch(this.webRoot, this.playServerRegex))
+            return this
+        ; Step 2: Try asking master.
         this.webRoot := "http://master.idlechampions.com/~idledragons/"
-        tries := 0
-        loop
+        response := this.CallGetPlayServer()
+        if (RegExMatch(response.play_server, this.playServerRegex))
         {
-            response := this.CallGetPlayServer()
-            if (response != "" AND response.play_server != "")
-                this.webRoot := response.play_server
-            tries += 1
-        } until (!InStr(this.webRoot, "master") OR tries >= this.initMaxRetries)
-		httpString := StrSplit(this.webRoot,":")[1]
-        isWebRootValid := httpString == "http" or httpString == "https"
-        if (!isWebRootValid OR InStr(this.webRoot, "master"))
-        {
-            currentPlayServers := [27,28,29,30]
-            Random, psIndex , 1, currentPlayServers.Count()
-            this.webRoot := "http://ps" . currentPlayServers[psIndex] . ".idlechampions.com/~idledragons/"
+            this.webRoot := response.play_server
+            return this
         }
+        ; Step 3: RNG
+        currentPlayServers := [27,28,29,30]
+        Random, psIndex , 1, currentPlayServers.Count()
+        this.webRoot := "http://ps" . currentPlayServers[psIndex] . ".idlechampions.com/~idledragons/"
         return this
     }
     
@@ -84,7 +84,7 @@ class IC_ServerCalls_Class extends SH_ServerCalls
     ;Various server call functions that should be pretty obvious.
     ;============================================================
     ;Except this one, it is used internally and shouldn't be called directly.
-    ServerCall( callName, parameters, timeout := "", retryNum := 0) 
+    ServerCall( callName, parameters := "", timeout := "", retryNum := 0) 
     {
         response := ""
         URLtoCall := this.webRoot . "post.php?call=" . callName . parameters
@@ -273,8 +273,7 @@ class IC_ServerCalls_Class extends SH_ServerCalls
     ; Get the loadbalanced Play Server
     CallGetPlayServer() 
     {
-        advParams := this.dummyData 
-        return this.ServerCall( "getPlayServerForDefinitions", advParams )
+        return this.ServerCall("getPlayServerForDefinitions")
     }
 
     ; Updates the play server used for server calls.
