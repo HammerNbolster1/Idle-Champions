@@ -118,7 +118,11 @@ class IC_BrivSharedFunctions_Class
         this.SetUserCredentials()
         if (this.sprint != "" AND this.steelbones != "" AND (this.sprint + this.steelbones) < 190000)
             response := g_serverCall.CallPreventStackFail( this.sprint + this.steelbones, true)
-        g_ScriptHubComs.RunTimersOnModronResetStart()
+        try {
+            g_ScriptHubComs.RunTimersOnModronResetStart()
+        } catch {
+            ; Do nothing.
+        }
         while (this.Memory.ReadResetting() AND ElapsedTime < timeout)
         {
             ElapsedTime := A_TickCount - StartTime
