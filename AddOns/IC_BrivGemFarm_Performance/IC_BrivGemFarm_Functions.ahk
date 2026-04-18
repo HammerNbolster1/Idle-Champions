@@ -102,6 +102,14 @@ class IC_BrivGemFarm_Class
     ;=====================================================
     ;Primary Gem Farm loop functions
     ;=====================================================
+    ; Records the end of a run for statistics.
+    RecordEndRun()
+    {
+        g_SharedData.LastRunTime := A_TickCount - This.ThisRunStart
+        , g_SharedData.TotalRunsCount += 1
+        This.ThisRunStart := A_TickCount
+    }
+
     ; setup steps to take to set up gem farm before starting the primary loop. Returns 0 on normal, negative on error.
     GemFarmPreLoopSetup(includeBrivFormation3 := False)
     {
@@ -208,6 +216,7 @@ class IC_BrivGemFarm_Class
     ; Do things that are needed after a game reset from being stuck
     GemFarmDoStuckCleanup()
     {
+        this.RecordEndRun()
         g_SharedData.TriggerStart := true
         g_SharedData.StackFail := StackFailStates.FAILED_TO_PROGRESS ; 3
         g_SharedData.StackFailStats.TALLY[g_SharedData.StackFail] += 1
@@ -326,6 +335,7 @@ class IC_BrivGemFarm_Class
         ; Briv ran out of jumps but has enough stacks for a new adventure, restart adventure. With protections from repeating too early or resetting within 5 zones of a reset.
         if (hasteStacks < 50 AND stacks >= targetStacks AND g_SF.Memory.ReadHighestZone() > 10 AND (g_SF.Memory.GetModronResetArea() - g_SF.Memory.ReadHighestZone() > 5 ))
         {
+            this.RecordEndRun()
             stackFail := StackFailStates.FAILED_TO_REACH_STACK_ZONE_HARD ; 4
             g_SharedData.StackFailStats.TALLY[stackfail] += 1
             forcedResetReason := "Briv ran out of jumps but has stacks for next. [@" . g_SF.Memory.ReadHighestZone() . "]"
@@ -577,6 +587,7 @@ class IC_BrivGemFarm_Class
         }
         if ( ElapsedTime >= maxOnlineStackTime AND !forceStack)
         {
+            this.RecordEndRun()
             this.RestartAdventure( "Online stacking took too long (> " . (maxOnlineStackTime / 1000) . "s) - z[" . g_SF.Memory.ReadCurrentZone() . "].")
             this.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
