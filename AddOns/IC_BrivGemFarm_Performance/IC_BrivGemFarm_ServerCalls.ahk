@@ -148,10 +148,20 @@ class IC_BrivGemFarm_ServerCalls_Class extends IC_ServerCalls_Class
         isMaxReady := gems >= gemsSilver + gemsGold ; ((Floor(gemsSilver / silverChestCost) >= serverRateBuy OR Floor(gemsGold / goldChestCost) >= serverRateBuy))
         if (this.UserSettings[ "BuyChests" ] AND ((this.UserSettings[ "WaitToBuyChests" ] AND isMaxReady) OR !this.UserSettings[ "WaitToBuyChests" ]))
         {
-            amount := Floor(gemsSilver / silverChestCost)
-            responses.Push(this.BuyChests( chestID := 1, amount ))
-            amount := Floor(gemsGold / goldChestCost) 
-            responses.Push(this.BuyChests( chestID := 2, amount ))
+            if (this.UserSettings[ "WaitToBuyChests" ])
+            {
+                amount := Floor(gemsSilver / silverChestCost)
+                responses.Push(this.BuyChests( chestID := 1, amount ))
+                amount := Floor(gemsGold / goldChestCost) 
+                responses.Push(this.BuyChests( chestID := 2, amount ))
+            }
+            else
+            {
+                amount := Min(Floor( (gems * this.UserSettings[ "BuySilverChestRatio" ]) / silverChestCost), serverRateBuy)
+                responses.Push(this.BuyChests( chestID := 1, amount ))
+                amount := Min(Floor( (gems * this.UserSettings[ "BuyGoldChestRatio" ]) / goldChestCost), serverRateBuy)
+                responses.Push(this.BuyChests( chestID := 2, amount ))
+            }
         }
         ; OPENCHESTS - only open if can do a maxed call if WaitToBuyChests set
         amount := Min(numSilverChests - this.UserSettings[ "MinSilverChestCount" ], serverRateOpen)

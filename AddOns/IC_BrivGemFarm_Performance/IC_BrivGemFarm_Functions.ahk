@@ -20,6 +20,7 @@ class IC_BrivGemFarm_Class
     DoneLeveling := False
     ClickSpam := "{ClickDmg}"
     LockLevelUp := False
+    SkipNextChestCheck := False
 
     InitChamps()
     {
@@ -173,7 +174,9 @@ class IC_BrivGemFarm_Class
         firstRun := False
         g_SharedData.PlayServer := StrSplit(StrSplit(g_ServerCall.webroot,".")[1], "/")[3]
         ; Do Chests after Reset
-        this.CheckAndDoChests()
+        if (!this.SkipNextChestCheck)
+            this.CheckAndDoChests()
+        this.SkipNextChestCheck := False
         
         if(doBasePartySetup)
         {
@@ -509,6 +512,7 @@ class IC_BrivGemFarm_Class
                 ElapsedTime := A_TickCount - StartTime
             }
             g_SF.SafetyCheck(stackRestart := True)
+            this.SkipNextChestCheck := True
             stacks := this.GetNumStacksFarmed()
             ;check if save reverted back to below stacking conditions
             if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings[ "MinStackZone" ])
