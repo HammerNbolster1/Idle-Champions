@@ -27,10 +27,10 @@ class IC_BrivSharedFunctions_Class
     ; Force adventure reset rather than relying on modron to reset.
     RestartAdventure( reason := "" )
     {
-        targetStackModifier := g_SF.CalculateBrivStacksToReachNextModronResetZone()
-        if(!this.StackedBeforeRestart := True)
-            g_BrivGemFarm.StackNormal(30000, targetStackModifier, forceStack := True) ; Give 30s max to try to gain some stacks before a forced reset.
-        this.StackedBeforeRestart := True
+        ; targetStackModifier := g_SF.CalculateBrivStacksToReachNextModronResetZone()
+        ; if(!this.StackedBeforeRestart := True)
+        ;     g_BrivGemFarm.StackNormal(30000, targetStackModifier, forceStack := True) ; Give 30s max to try to gain some stacks before a forced reset.
+        ; this.StackedBeforeRestart := True
         g_SharedData.LoopString := "ServerCall: Restarting adventure"
         jsonObj := base.LoadObjectFromJSON(A_LineFile . "\..\ServerCall_Settings.json")
         thunderStepMod := g_SF.BrivHasThunderStep() ? IC_BrivGemFarm_Class.BrivFunctions.ThunderStepMult : 1
