@@ -52,6 +52,21 @@ class GUIFunctions
         g_MouseToolTips[toolTipTarget] := tipMessage
     }
 
+    ; Returns the width of DDL accomodating the longest item in list.
+    DropDownSize(List, Font:="", FontSize:=10, Padding:=24)
+    {
+        Loop, Parse, List, |
+        {
+            if Font
+                Gui DropDownSize:Font, s%FontSize%, %Font%
+            Gui DropDownSize:Add, Text, R1, %A_LoopField%
+            GuiControlGet T, DropDownSize:Pos, Static%A_Index%
+            TW > X ? X := TW :
+        }
+        Gui DropDownSize:Destroy
+        return X + Padding
+    }
+
     ; Finds a control ID based on its variable name.
     GetToolTipTarget(controlVariableName)
     {
