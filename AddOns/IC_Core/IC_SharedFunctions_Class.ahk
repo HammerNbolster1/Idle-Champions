@@ -490,6 +490,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             this.Settings := settings
         ;only send input messages if necessary
         brivBenched := this.Memory.ReadChampBenchedByID(ActiveEffectKeySharedFunctions.Briv.HeroID)
+        formationToSwapTo := ""
         ;check to bench briv
         if (!brivBenched AND this.BenchBrivConditions(this.Settings))
         {
@@ -505,7 +506,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             return
         }
         if(!IC_BrivGemFarm_Class.BrivFunctions.HasSwappedFavoritesThisRun OR forceCheck)
-            isFormation2 := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(2), 2)
+            isFormation2 := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(2))
         else
             isFormation2 := g_SF.Memory.ReadMostRecentFormationFavorite() == 2
         isWalkZone := this.Settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50)] == 0
@@ -528,11 +529,11 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         
               ; Q OR E depending on route.
             if (this.UnBenchBrivConditions(this.Settings))
-                this.DoSwitchFormation(1)
+                this.DoSwitchFormation(formationToSwapTo := 1)
             else if (this.BenchBrivConditions(this.Settings))
-                this.DoSwitchFormation(3)
+                this.DoSwitchFormation(formationToSwapTo := 3)
         }
-        if(g_BrivGemFarm.IsInModronFormation AND !this.IsCurrentFormationLazy(g_SF.Memory.GetActiveModronFormation(), 2)) ; using 2 as stack formation ID to ignore taty being in modron.
+        if(g_BrivGemFarm.IsInModronFormation AND formationToSwapTo != "" AND !this.IsCurrentFormationLazy(g_SF.Memory.GetActiveModronFormation(), formationToSwapTo)) ; using 2 as stack formation ID to ignore taty being in modron.
             g_BrivGemFarm.IsInModronFormation := False
     }
 
@@ -586,8 +587,8 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         if (this.Memory.ReadCurrentZone() >= maxSwapArea)
             return false
         ;unbench briv if outside the 'Briv Jump Buffer' and a jump animation override isn't added to the list
-        else if (this.Memory.ReadTransitionOverrideSize() != 1)
-            return true
+        ; else if (this.Memory.ReadTransitionOverrideSize() != 1)
+        ;     return true
         return false
     }
 
@@ -692,7 +693,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
                 }
                 if(!this.PID) ; Do not keep attempting to launch IC if a retry has also failed.
                 { 
-                    MsgBox, 48, ICScriptHub was unable to re-launch the game. `nVerify the game location is set properly by enabling the Game Location Settings addon, clicking Change Game Location on the Briv Gem Farm tab, and ensuring the launch command is set properly.
+                    MsgBox, 48, Unable to re-launch game, Verify the game location is set properly by enabling the Game Location Settings addon, clicking Change Game Location on the Briv Gem Farm tab, and ensuring the launch command is set properly.
                     ExitApp
                 }
             }
@@ -970,7 +971,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     WaitForRecoveryFormationSwap(timeout, sleepTime, startTime, spam, formationFavoriteNum)
     {
         ElapsedTime := counter := 0
-        this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum), formationFavoriteNum )
+        this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum))
         g_SharedData.LoopString := "Waiting for formation swap..."
         while(!isCurrentFormation AND ElapsedTime < timeout AND (!this.Memory.ReadNumAttackingMonstersReached() AND formationFavoriteNum == 2))
         {
@@ -988,14 +989,14 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             ; isCurrentFormation := g_SF.Memory.ReadMostRecentFormationFavorite() == formationFavoriteNum AND IC_BrivGemFarm_Class.BrivFunctions.HasSwappedFavoritesThisRun
             ; if (!isCurrentFormation)
             ;     isCurrentFormation := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum), formationFavoriteNum)
-            isCurrentFormation := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum), formationFavoriteNum) ; just being safe for now.
+            isCurrentFormation := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum)) ; just being safe for now.
         }
         return isCurrentFormation
     }
 
     HandleRecoveryUnderAttack(timeout, sleepTime, spam, startTime, ElapsedTime, formationFavoriteNum, isCurrentFormation) ;, lastLoopTimedOut
     {
-        if (formationFavoriteNum == 2 AND this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum), formationFavoriteNum))
+        if (formationFavoriteNum == 2 AND this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum)))
             return
         g_SharedData.LoopString := "Under attack. Retreating to change formations..."
         while(!IsCurrentFormation AND (this.Memory.ReadNumAttackingMonstersReached() OR this.Memory.ReadNumRangedAttackingMonsters()) AND (ElapsedTime < (2 * timeout)))
@@ -1006,7 +1007,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             if(formationFavoriteNum != 2)
                 this.ToggleAutoProgress(1, true)
             ; if (lastLoopTimedOut) ; use old way, else use new formation check method
-            isCurrentFormation := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum), 2) ; this.Memory.ReadMostRecentFormationFavorite() == formationFavoriteNum
+            isCurrentFormation := this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(formationFavoriteNum)) ; this.Memory.ReadMostRecentFormationFavorite() == formationFavoriteNum
             Sleep, sleepTime
         }
     }
@@ -1027,7 +1028,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         return true
     }
 
-    ; Returns true if all champs in the formation are in the test formation. Does not need exact match. "favorite" largely ignored - only to specifically ignore tatyana in formation 2.
+    ; Returns true if all champs in the formation are in the test formation. Does not need exact match. "favorite" tests if the favorite is the formation before testing the passed testFormation. 
     IsCurrentFormationLazy(testformation := "", favorite := "")
     {
         if(!IsObject(testFormation))
@@ -1038,9 +1039,11 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         currCount := currentFormation.Count()
         if(currCount != testformation.Count())
             return false
+        if(favorite != "" AND this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(favorite))) ; test if current formation is equal to favorite before testing if it is equal to the test formation when favorite is given.
+            return false
         loop, %currCount%
-            if(currentFormation[A_Index] != -1 AND testformation[A_Index] != currentFormation[A_Index] AND (favorite == 2 AND testformation[A_Index] != (Tatyana := 97))) ; favorite 2 + tatyana = skip
-                return false
+            if(currentFormation[A_Index] != -1 AND testformation[A_Index] != currentFormation[A_Index]) ; not empty slot and champs don't match
+                return false ; !(favorite == 2 AND testformation[A_Index] != (Tatyana := 97)) ; favorite 2 + tatyana = skip
         return true
     }
 
@@ -1195,7 +1198,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         ; Formation 2 should NOT have familiars.
         if (shouldInclude AND this.Memory.GetFormationFamiliarsByFavorite(favorite) == "")
         {
-            ErrorMsg := "Warning: No famliars found in Favorite Formation " . favorite . " (" . FormationFavoriteHotkey[favorite] . "). It is highly recommended to use familiars for click damage."
+            ErrorMsg := "Warning: No familiars found in Favorite Formation " . favorite . " (" . FormationFavoriteHotkey[favorite] . "). It is highly recommended to use familiars for click damage."
             return ErrorMsg
         }
         if (!shouldInclude AND this.Memory.GetFormationFamiliarsByFavorite(favorite) != "")

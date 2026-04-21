@@ -1,6 +1,7 @@
 ; EngineSettings class contains IC's EngineSettings class structure. Useful for finding webroot for doing server calls.
 class IC_EngineSettings_Class extends SH_StaticMemoryPointer
 {
+    UseAltPtrs := False
     GetVersion()
     {
         return "v2.1.6, 2025-11-15"
@@ -11,7 +12,7 @@ class IC_EngineSettings_Class extends SH_StaticMemoryPointer
         if (_MemoryManager.is64bit == "") ; Don't build offsets if no client is available to check variable types.
             return
         ;baseAddress := _MemoryManager.baseAddress["mono-2.0-bdwgc.dll"]+this.ModuleOffset
-        if (!InStr(g_ImportsGameVersionPlatform64, "EGS"))
+        if (this.UseAltPtrs)
             baseAddress := _MemoryManager.baseAddress["UnityPlayer.dll"]+this.ModuleOffset
         else
             baseAddress := _MemoryManager.baseAddress["mono-2.0-bdwgc.dll"]+this.ModuleOffset

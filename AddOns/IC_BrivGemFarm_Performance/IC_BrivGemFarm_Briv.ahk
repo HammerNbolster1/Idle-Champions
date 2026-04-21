@@ -307,7 +307,7 @@ class BrivFunctions
         eVal := skipE != "" ? Max(skipE + 1, 1) : 1
         if (!Isobject(mod50values))
         {
-            mod50Int := mod50values
+            mod50Int := mod50values.Clone()
             mod50values := []
             Loop, 50
                 mod50values[A_Index] := (mod50Int & (2 ** (A_Index - 1))) != 0

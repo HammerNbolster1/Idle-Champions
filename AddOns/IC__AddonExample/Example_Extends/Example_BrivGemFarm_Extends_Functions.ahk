@@ -11,6 +11,21 @@ class IC_Example_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
     InitZone( spam )
     {
         Critical, On
+        this.DoLeveling( spam )
+        ; try to progress
+        this.DirectedInput(,,"{Right}")
+        this.ToggleAutoProgress(1)
+        ;-----------  Modification being made through Extends -------------
+        this.FireFormationUltimates()              ; Call a new function that activates ultimates.
+        ;----------------------- MOdification End. ------------------------
+        this.ModronResetZone := this.Memory.GetModronResetArea() ; once per zone in case user changes it mid run.
+        g_PreviousZoneStartTime := A_TickCount
+        Critical, Off
+    }
+
+    ; Presses leveling keys including click leveling.
+    DoLeveling( spam := "" )
+    {
         if(g_UserSettings[ "NoCtrlKeypress" ])
         {
             this.DirectedInput(,release := 0, "{ClickDmg}") ;keysdown
@@ -22,18 +37,8 @@ class IC_Example_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
             this.DirectedInput(,release := 0, ["{RCtrl}","{ClickDmg}"]*) ;keysdown
             this.DirectedInput(hold := 0,, ["{ClickDmg}","{RCtrl}"]*) ;keysup
         }
-        ; turn Fkeys off/on again
         this.DirectedInput(hold := 0,, spam*) ;keysup
         this.DirectedInput(,release := 0, spam*) ;keysdown
-        ; try to progress
-        this.DirectedInput(,,"{Right}")
-        this.ToggleAutoProgress(1)
-        ;-----------  Modification being made through Extends -------------
-        this.FireFormationUltimates()              ; Call a new function that activates ultimates.
-        ;----------------------- MOdification End. ------------------------
-        this.ModronResetZone := this.Memory.GetModronResetArea() ; once per zone in case user changes it mid run.
-        g_PreviousZoneStartTime := A_TickCount
-        Critical, Off
     }
 
     ; Example of a function being added.

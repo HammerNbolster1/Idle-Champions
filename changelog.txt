@@ -1,3 +1,7 @@
+January 24, 2026
+    Removed BrivGemFarm requirement from ThemeManager.
+    Added a check to the play button that will open the game if it's not already.
+
 November 23, 2025
     Fixed BPH disappearing when doing game restarts (e.g. FORT restart).
     Fixed GUI elements in parts of BrivGemFarm.

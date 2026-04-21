@@ -33,7 +33,6 @@ class IC_ServerCalls_Class extends SH_ServerCalls
     initMaxRetries := 2
     playServerRegex := "^https?://ps\d+\.idlechampions.com/~idledragons/"
     
-
     __New( userID := 0, userHash := 0, instanceID := 0)
     {
         this.BlankSlate(userID, userHash, instanceID)
@@ -67,7 +66,7 @@ class IC_ServerCalls_Class extends SH_ServerCalls
 
     GetVersion()
     {
-        return "v2.4.6, 2025-11-11"
+        return "v2.4.7, 2026-04-01"
     }
 
     UpdateDummyData()
@@ -292,51 +291,4 @@ class IC_ServerCalls_Class extends SH_ServerCalls
     }
     
     #include *i %A_LineFile%\..\IC_ServerCalls_Class_Extra.ahk
-}
-
-class Byteglow_ServerCalls_Class extends SH_ServerCalls
-{
-    webRoot := "https://ic.byteglow.com/api/"
-    timeoutVal := 60000
-    ServerCall( callName, parameters, timeout := "" ) 
-    {
-
-        response := ""
-        URLtoCall := this.webRoot . callName . "?" . parameters
-        timeout := timeout ? timeout : this.timeoutVal
-        WR := ComObjCreate( "WinHttp.WinHttpRequest.5.1" )
-        WR.SetTimeouts( 0, 45000, 30000, timeout )
-        if (this.proxy != "")
-            WR.SetProxy(2, this.proxy)
-        Try {
-            WR.Open( "POST", URLtoCall, true )
-            WR.SetRequestHeader( "Content-Type","application/x-www-form-urlencoded" )
-            WR.Send()
-            WR.WaitForResponse( -1 )
-            data := WR.ResponseText
-            Try
-            {
-                response := JSON.parse(data)
-            }
-            ;catch "Failed to fetch valid JSON response from server."
-        }
-        catch exception {
-            return exception
-        }
-        return response
-    }
-
-    ; https://ic.byteglow.com/api/briv-stacks?gild=2&enchant=60009&rarity=4&metalborn=1&target=2000
-    ; https://ic.byteglow.com/api/briv-stacks?skips=11&metalborn=1&target=2000
-    CallBrivStacks(gild, ilvls, rarity, isMetalborn, modronReset) 
-    {
-        params := "gild=" . gild . "&enchant=" . ilvls . "&rarity=" . rarity . "&metalborn=" . isMetalborn . "&target=" . modronReset
-        return this.ServerCall( "briv-stacks", params)
-    }    
-    
-    __New()
-    {
-        this.LoadSettings()
-        return this
-    }
 }

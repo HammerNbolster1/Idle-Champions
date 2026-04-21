@@ -485,6 +485,7 @@ class IC_BrivGemFarm_Stats_Component
 		GuiControl, ICScriptHub:, GemHunterID, % this.GemHunter()
     }
 
+    ; Caches run start values such as current xp, gems, and chests.
     StoreStartingValues()
     {
         this.ActiveGameInstance := g_SF.Memory.ReadActiveGameInstance()
@@ -506,6 +507,7 @@ class IC_BrivGemFarm_Stats_Component
         this.FastRunTime := 999999999
     }
 
+    ; Returns calculated XP gains.
     DoXPChecks()
     {
         ; Check if Nordom is in formations
@@ -526,6 +528,7 @@ class IC_BrivGemFarm_Stats_Component
         return xpGain
     }
 
+    ; Updates warning label if an XP modifier was found.
     DisplayXPWarning(isNordomFound, isMechanusFound)
     {
         preStrValue := ""
