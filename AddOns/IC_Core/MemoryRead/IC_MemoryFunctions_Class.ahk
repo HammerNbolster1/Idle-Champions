@@ -785,7 +785,7 @@ class IC_MemoryFunctions_Class
     ;Returns the formation stored at the favorite value passed in.
     GetFormationByFavorite( favorite := 0 ){
         version := this.GameManager.game.gameInstances[this.GameInstance].FormationSaveHandler.formationSavesV2.__version.Read()
-        if(this.FavoriteFormations[favorite] != "" AND version == this.LastFormationSavesVersion[favorite])
+        if( this.FavoriteFormations[favorite] != "" AND version == this.LastFormationSavesVersion[favorite] AND version != "" )
             return this.FavoriteFormations[favorite]
         slot := this.GetSavedFormationSlotByFavorite(favorite)
         formation := this.GetFormationSaveBySlot(slot)
@@ -1259,6 +1259,16 @@ class IC_MemoryFunctions_Class
     ReadStacksToNext()
     {
         return g_SF.CalculateBrivStacksToReachNextModronResetZone()
+    }
+
+    ReadHealthPercent(champID := 58)
+    {
+        if (champID < 1)
+            return ""
+        obj := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[g_SF.Memory.GetHeroHandlerIndexByChampID(champID)].health.QuickClone()
+        ; lastHealthPercent
+        obj.FullOffsets[obj.FullOffsets.Length()] += 8
+        return Max(0, (100 * obj.Read()))
     }
 
     #include *i %A_LineFile%\..\IC_MemoryFunctions_Extended.ahk
