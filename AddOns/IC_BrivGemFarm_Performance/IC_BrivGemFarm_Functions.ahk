@@ -29,6 +29,7 @@ class IC_BrivGemFarm_Class
     ; Levelup Addon compatability
     UsedWardenUlt := false
     UsedFaridehUlt := false
+    SkipNextChestCheck := False
 
     InitChamps()
     {
@@ -111,6 +112,14 @@ class IC_BrivGemFarm_Class
     ;=====================================================
     ;Primary Gem Farm loop functions
     ;=====================================================
+    ; Records the end of a run for statistics.
+    RecordEndRun()
+    {
+        g_SharedData.LastRunTime := A_TickCount - This.ThisRunStart
+        , g_SharedData.TotalRunsCount += 1
+        This.ThisRunStart := A_TickCount
+    }
+
     ; setup steps to take to set up gem farm before starting the primary loop. Returns 0 on normal, negative on error.
     GemFarmPreLoopSetup(includeBrivFormation3 := False)
     {
@@ -174,7 +183,9 @@ class IC_BrivGemFarm_Class
         firstRun := False
         g_SharedData.PlayServer := StrSplit(StrSplit(g_ServerCall.webroot,".")[1], "/")[3]
         ; Do Chests after Reset
-        g_SharedData.LoopString := this.CheckAndDoChests()
+        if (!this.SkipNextChestCheck)
+            g_SharedData.LoopString := this.CheckAndDoChests()
+        this.SkipNextChestCheck := False
         
         if(doBasePartySetup)
         {
@@ -217,6 +228,7 @@ class IC_BrivGemFarm_Class
     ; Do things that are needed after a game reset from being stuck
     GemFarmDoStuckCleanup()
     {
+        this.RecordEndRun()
         g_SharedData.TriggerStart := true
         g_SharedData.StackFail := StackFailStates.FAILED_TO_PROGRESS ; 3
         g_SharedData.StackFailStats.TALLY[g_SharedData.StackFail] += 1
@@ -338,6 +350,7 @@ class IC_BrivGemFarm_Class
         ; Briv ran out of jumps but has enough stacks for a new adventure, restart adventure. With protections from repeating too early or resetting within 5 zones of a reset.
         if (hasteStacks < 50 AND stacks >= targetStacks AND g_SF.Memory.ReadHighestZone() > 10 AND (g_SF.Memory.GetModronResetArea() - g_SF.Memory.ReadHighestZone() > 5 ))
         {
+            this.RecordEndRun()
             stackFail := StackFailStates.FAILED_TO_REACH_STACK_ZONE_HARD ; 4
             g_SharedData.StackFailStats.TALLY[stackfail] += 1
             forcedResetReason := "Briv ran out of jumps but has stacks for next. [@" . g_SF.Memory.ReadHighestZone() . "]"
@@ -524,6 +537,7 @@ class IC_BrivGemFarm_Class
             }
             g_SF.SafetyCheck(stackRestart := True)
             stacksFarmed := this.GetNumStacksFarmed()
+            this.SkipNextChestCheck := True
             ;check if save reverted back to below stacking conditions
             if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings[ "MinStackZone" ])
             {
@@ -639,6 +653,7 @@ class IC_BrivGemFarm_Class
         this.UsedFaridehUlt := false
         if ( ElapsedTime >= maxOnlineStackTime)
         {
+            this.RecordEndRun()
             this.RestartAdventure( "Online stacking took too long (> " . (maxOnlineStackTime / 1000) . "s) - z[" . g_SF.Memory.ReadCurrentZone() . "].")
             this.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
