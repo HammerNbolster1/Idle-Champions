@@ -56,6 +56,12 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
         g_BrivUserSettings[ "RestoreLastWindowOnGameOpen" ] := True
     if (g_BrivUserSettings[ "IgnoreBrivHaste" ] == "" )
         g_BrivUserSettings[ "IgnoreBrivHaste" ] := 0  
+    if ( g_BrivUserSettings[ "FortOnlyRestart" ] == "" )
+        g_BrivUserSettings[ "FortOnlyRestart" ] := False
+    if ( g_BrivUserSettings[ "UseWardenUlt" ] == "" )
+        g_BrivUserSettings[ "UseWardenUlt" ] := False
+    if ( g_BrivUserSettings[ "UseFaridehUl" ] == "" )
+        g_BrivUserSettings[ "UseFaridehUl" ] := False
     if ( g_BrivUserSettings[ "ForceOfflineGemThreshold" ] == "" )
         g_BrivUserSettings[ "ForceOfflineGemThreshold" ] := 0
     if ( g_BrivUserSettings[ "ForceOfflineRunThreshold" ] == "" )

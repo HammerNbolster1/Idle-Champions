@@ -25,59 +25,66 @@ Class IC_BrivGemFarm_AdvancedSettings_GUI
     Init()
     {
         global
-        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_HiddenFarmWindow x15 y+5, HiddenFarmWindow
-        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_RestoreLastWindowOnGameOpen x15 y+5, RestoreLastWindowOnGameOpen
-        Gui, ICScriptHub:Add, Checkbox, vOptionSettingEdit_IgnoreBrivHaste x15 y+5, IgnoreBrivHaste
+        ; Advanced Options Settings Group (Checkboxes only)
+        Gui, ICScriptHub:Add, GroupBox, Section x10 y+15 w215 h190 vWindowSettingsGroup, Advanced Options Settings
+        GuiControlGet, ws, ICScriptHub:Pos, WindowSettingsGroup
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_HiddenFarmWindow xs+10 ys+20, Hide Gem Farm Window
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_RestoreLastWindowOnGameOpen xs+10 y+5, Restore Last Window On Game Open
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_IgnoreBrivHaste xs+10 y+5, Predict Stacks Off? (IgnoreBrivHaste)
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_FortOnlyRestart xs+10 y+5, No Stack FORTs
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_UseWardenUlt xs+10 y+5, Use Warden Ult When Stacking
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_UseFaridehUlt xs+10 y+5, Use Farideh Ult When Stacking
+
+        ; Advanced Settings Group (Edit boxes/Numerical fields only)
+        Gui, ICScriptHub:Add, GroupBox, x235 ys w215 h190 vAdvancedSettingsGroup, Advanced Settings
+        
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_ForceOfflineGemThreshold x245 ys+20 w50, % g_BrivUserSettings[ "ForceOfflineGemThreshold" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_ForceOfflineGemThreshold x+5 yp hp 0x200, ForceOfflineGemThreshold
+        
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_ForceOfflineRunThreshold x245 y+5 w50, % g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_ForceOfflineRunThreshold x+5 yp hp 0x200, ForceOfflineRunThreshold
 
         GUIFunctions.UseThemeTextColor("InputBoxTextColor")
-
-        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_ForceOfflineGemThreshold Section x15 y+5 w50, % g_BrivUserSettings[ "ForceOfflineGemThreshold" ]
-        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_ForceOfflineRunThreshold x15 y+10 w50, % g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
-        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_BrivJumpBuffer x15 y+10 w50, % g_BrivUserSettings[ "BrivJumpBuffer" ]
-        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_DashWaitBuffer x15 y+10 w50, % g_BrivUserSettings[ "DashWaitBuffer" ]
-        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_WindowXPosition x15 y+10 w50, % g_BrivUserSettings[ "WindowXPosition" ]
-        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_WindowYPosition x15 y+10 w50, % g_BrivUserSettings[ "WindowYPosition" ]
-
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_BrivJumpBuffer x245 y+5 w50, % g_BrivUserSettings[ "BrivJumpBuffer" ]
         GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_BrivJumpBuffer x+5 yp hp 0x200, BrivJumpBuffer
 
-        GuiControlGet, xyVal, ICScriptHub:Pos, OptionSettingEdit_ForceOfflineGemThreshold
-        xyValX += 55
-        xyValY += 5
-        Gui, ICScriptHub:Add, Text, x%xyValX% y%xyValY%+10 vOptionSettingText_ForceOfflineGemThreshold, ForceOfflineGemThreshold
-        Gui, ICScriptHub:Add, Text, x%xyValX% y+18 vOptionSettingText_ForceOfflineRunThreshold, ForceOfflineRunThreshold
-        Gui, ICScriptHub:Add, Text, x%xyValX% y+18 vOptionSettingText_BrivJumpBuffer, BrivJumpBuffer
-        Gui, ICScriptHub:Add, Text, x%xyValX% y+18 vOptionSettingText_DashWaitBuffer, DashWaitBuffer
-        Gui, ICScriptHub:Add, Text, x%xyValX% y+18 vOptionSettingText_WindowXPosition, WindowXPosition
-        Gui, ICScriptHub:Add, Text, x%xyValX% y+18 vOptionSettingText_WindowYPosition, WindowyPosition
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_DashWaitBuffer x245 y+5 w50, % g_BrivUserSettings[ "DashWaitBuffer" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_DashWaitBuffer x+5 yp hp 0x200, DashWaitBuffer
 
-        ; ############ Preferred Briv Jump Zones #####################
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_WindowXPosition x245 y+5 w50, % g_BrivUserSettings[ "WindowXPosition" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_WindowXPosition x+5 yp hp 0x200, WindowXPosition
 
-        GuiControlGet, xyVal, ICScriptHub:Pos, OptionSettingText_WindowYPosition
-        xyValY += 35
-        xyValX := 10
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_WindowYPosition x245 y+5 w50, % g_BrivUserSettings[ "WindowYPosition" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_WindowYPosition x+5 yp hp 0x200, WindowyPosition
 
-        Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, Text, x10 y%xyValY% vOptionSettingText_TitlePreferredJump, Preferred Briv Jump Zones
-        Gui, ICScriptHub:Font, w400
-
-        local controlLoc := IC_BrivGemFarm_AdvancedSettings_Functions.BuildModTables(xyValX+20, xyValY)
+        ; Preferred Briv Jump Zones Group
+        preferredY := wsY + 205
+        Gui, ICScriptHub:Add, GroupBox, x10 y%preferredY% w440 h235 vPreferredJumpGroup, Preferred Briv Jump Zones
+        
+        local controlLoc := IC_BrivGemFarm_AdvancedSettings_Functions.BuildModTables(20, preferredY)
         IC_BrivGemFarm_AdvancedSettings_Component.LoadAdvancedSettings()
 
-        ; TODO preferred jump zones addon test
         ; Briv Leveling by Zone
-        GuiControlGet, pos, ICScriptHub:Pos, PreferredBrivJumpSettingMod_50_50
         ySpacing := 10
         newW := 440
-        ctrlH:= 21
-        maxY := posY + posH + ySpacing
-        newH := maxY - controlLoc[2]
-        newH := maxY - posY
-        levelingY := posY + newH + 10
-        Gui, ICScriptHub:Add, Groupbox, Section xs y%levelingY% w%newW% vBrivLevelingGroup, Briv Leveling by Zone
+        ctrlH := 21
+        levelingY := preferredY + 250
+        Gui, ICScriptHub:Add, Groupbox, Section x10 y%levelingY% w%newW% vBrivLevelingGroup, Briv Leveling by Zone
         GUIFunctions.UseThemeTextColor("InputBoxTextColor")
-        Gui, ICScriptHub:Add, Edit, w40 xs+%xSection% ys+20 Limit2 vBrivLevelingCount gBrivLevelingCount
+        Gui, ICScriptHub:Add, Edit, w40 xs+%xSection% ys+20 Limit2 vOptionSettingEdit_BrivLevelingCount gBrivLevelingCount
         GUIFunctions.UseThemeTextColor()
-        Gui, ICScriptHub:Add, Text, x+5 h%ctrlH% 0x200 vBrivLevelingCountText, Number of leveling zones (up to 15)
+        Gui, ICScriptHub:Add, Text, x+5 h%ctrlH% 0x200 vOptionSettingText_BrivLevelingCountText, Number of leveling zones (up to 15)
         Loop, 15
         {
             GUIFunctions.UseThemeTextColor("InputBoxTextColor")
@@ -107,7 +114,7 @@ Class IC_BrivGemFarm_AdvancedSettings_GUI
 
     LoadBrivLevelingThresholds(thresholds, count)
     {
-        GuiControl, ICScriptHub:, BrivLevelingCount, % count
+        GuiControl, ICScriptHub:, OptionSettingEdit_BrivLevelingCount, % count
         Loop, 15
         {
             zone := thresholds[A_Index].zone
@@ -129,16 +136,14 @@ Class IC_BrivGemFarm_AdvancedSettings_GUI
         countY := bY + 18
         
         ; Bug when using Move in a Tab control
-        GuiControl, ICScriptHub:MoveDraw, BrivLevelingCount, x%countX% y%countY%
-        GuiControlGet, bug, ICScriptHub:Pos, BrivLevelingCount
+        GuiControl, ICScriptHub:MoveDraw, OptionSettingEdit_BrivLevelingCount, x%countX% y%countY%
+        GuiControlGet, bug, ICScriptHub:Pos, OptionSettingEdit_BrivLevelingCount
         offX := bugX - countX
         offY := bugY - countY
-        
         countX -= offX
         countY -= offY
-        
-        GuiControl, ICScriptHub:MoveDraw, BrivLevelingCount, x%countX% y%countY%
-        GuiControl, ICScriptHub:MoveDraw, BrivLevelingCountText, % "x" (countX + 45) " y" countY
+        GuiControl, ICScriptHub:MoveDraw, OptionSettingEdit_BrivLevelingCount, x%countX% y%countY%
+        GuiControl, ICScriptHub:MoveDraw, OptionSettingText_BrivLevelingCountText, % "x" (countX + 45) " y" countY
 
         gridStartY := countY + 28
         maxY := gridStartY
@@ -200,7 +205,7 @@ BrivLevelingThresholds()
 {
     global
     thresholds := []
-    GuiControlGet, count,, BrivLevelingCount
+    GuiControlGet, count,, OptionSettingEdit_BrivLevelingCount
     Loop, % count
     {
         GuiControlGet, zone,, BrivLevelingZone%A_Index%

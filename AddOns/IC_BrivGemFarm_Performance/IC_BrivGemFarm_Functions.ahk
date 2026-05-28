@@ -488,7 +488,10 @@ class IC_BrivGemFarm_Class
     StackFarm()
     {
         if (this.ShouldOfflineStack())
-            this.StackRestart()
+            if(g_BrivUserSettings[ "FortOnlyRestart" ])
+                this.StackRestartFORTOnly()
+            else
+                this.StackRestart()
         else if (this.StackNormal() == 0)
             return
         ;SetFormation needs to occur before dashwait in case game erroneously placed party on boss zone after stack restart
@@ -654,8 +657,8 @@ class IC_BrivGemFarm_Class
             Sleep, 30
             ElapsedTime := A_TickCount - StartTime
         }
-        this.UsedWardenUlt := false
-        this.UsedFaridehUlt := false
+        this.UsedWardenUlt := g_BrivUserSettings[ "UseWardenUlt" ] 
+        this.UsedFaridehUlt := g_BrivUserSettings[ "UseFaridehUl" ]
         if ( ElapsedTime >= maxOnlineStackTime)
         {
             this.RecordEndRun()
