@@ -748,11 +748,12 @@ class IC_BrivGemFarm_Class
     UseUlts()
     {
         ; Warden ultimate
-        if (!this.UsedWardenUlt && wardenThreshold > 0)
-            this.UsedWardenUlt := this.UseChampUltIfEnemyThresholdMet(WARDEN_ID := 36, g_BrivUserSettings[ "WardenUltThreshold" ])
+        if (!this.UsedWardenUlt && g_BrivUserSettings[ "WardenUltThreshold" ] > 0)
+            this.UsedWardenUlt := g_SF.UseChampUltIfEnemyThresholdMet(WARDEN_ID := 36, g_BrivUserSettings[ "WardenUltThreshold" ])
+        
         ; Farideh ultimate
-        if (!this.UsedFaridehUlt && faridehThreshold > 0)
-            this.UsedFaridehUlt := this.UseChampUltIfEnemyThresholdMet(FARIDEH_ID := 33, g_BrivUserSettings[ "FaridehUltThreshold" ])
+        if (!this.UsedFaridehUlt && g_BrivUserSettings[ "FaridehUltThreshold" ] > 0)
+            this.UsedFaridehUlt := g_SF.UseChampUltIfEnemyThresholdMet(FARIDEH_ID := 33, g_BrivUserSettings[ "FaridehUltThreshold" ])
     }
 
     ; Presses leveling keys including click leveling.
