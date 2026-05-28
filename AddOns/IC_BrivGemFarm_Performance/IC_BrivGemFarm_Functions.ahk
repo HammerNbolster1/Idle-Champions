@@ -657,8 +657,8 @@ class IC_BrivGemFarm_Class
             Sleep, 30
             ElapsedTime := A_TickCount - StartTime
         }
-        this.UsedWardenUlt := g_BrivUserSettings[ "UseWardenUlt" ] 
-        this.UsedFaridehUlt := g_BrivUserSettings[ "UseFaridehUl" ]
+        this.UsedWardenUlt := False
+        this.UsedFaridehUlt := False
         if ( ElapsedTime >= maxOnlineStackTime)
         {
             this.RecordEndRun()

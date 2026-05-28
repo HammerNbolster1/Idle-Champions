@@ -14,8 +14,8 @@ class IC_BrivGemFarm_AdvancedSettings_Component
         g_BrivUserSettings[ "WindowYPosition" ] := OptionSettingEdit_WindowYPosition
         g_BrivUserSettings[ "IgnoreBrivHaste" ] := OptionSettingCheck_IgnoreBrivHaste
         g_BrivUserSettings[ "FortOnlyRestart" ] := OptionSettingCheck_FortOnlyRestart
-        g_BrivUserSettings[ "UseWardenUlt" ] := OptionSettingCheck_UseWardenUlt
-        g_BrivUserSettings[ "UseFaridehUl" ] := OptionSettingCheck_UseFaridehUlt
+        g_BrivUserSettings[ "WardenUltThreshold" ] := OptionSettingEdit_WardenUltThreshold
+        g_BrivUserSettings[ "FaridehUltThreshold" ] := OptionSettingEdit_FaridehUltThreshold
         IC_BrivGemFarm_AdvancedSettings_Functions.UpdateJumpSettings()
         g_SF.WriteObjectToJSON( A_LineFile . "\..\..\IC_BrivGemFarm_Performance\BrivGemFarmSettings.json" , g_BrivUserSettings )
         try ; avoid thrown errors when comobject is not available.
@@ -34,14 +34,14 @@ class IC_BrivGemFarm_AdvancedSettings_Component
             GuiControl, ICScriptHub:, OptionSettingCheck_RestoreLastWindowOnGameOpen, % g_BrivUserSettings[ "RestoreLastWindowOnGameOpen" ]
             GuiControl, ICScriptHub:, OptionSettingCheck_IgnoreBrivHaste, % g_BrivUserSettings[ "IgnoreBrivHaste" ]
             GuiControl, ICScriptHub:, OptionSettingCheck_FortOnlyRestart, % g_BrivUserSettings[ "FortOnlyRestart" ]
-            GuiControl, ICScriptHub:, OptionSettingCheck_UseWardenUlt, % g_BrivUserSettings[ "UseWardenUlt" ]
-            GuiControl, ICScriptHub:, OptionSettingCheck_UseFaridehUlt, % g_BrivUserSettings[ "UseFaridehUl" ]
             GuiControl, ICScriptHub:, OptionSettingEdit_ForceOfflineGemThreshold, % g_BrivUserSettings[ "ForceOfflineGemThreshold" ]
             GuiControl, ICScriptHub:, OptionSettingEdit_ForceOfflineRunThreshold, % g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
             GuiControl, ICScriptHub:, OptionSettingEdit_BrivJumpBuffer, % g_BrivUserSettings[ "BrivJumpBuffer" ]
             GuiControl, ICScriptHub:, OptionSettingEdit_DashWaitBuffer, % g_BrivUserSettings[ "DashWaitBuffer" ]
             GuiControl, ICScriptHub:, OptionSettingEdit_WindowXPosition, % g_BrivUserSettings[ "WindowXPosition" ]
             GuiControl, ICScriptHub:, OptionSettingEdit_WindowYPosition, % g_BrivUserSettings[ "WindowYPosition" ]
+            GuiControl, ICScriptHub:, OptionSettingEdit_WardenUltThreshold, % g_BrivUserSettings[ "WardenUltThreshold" ]
+            GuiControl, ICScriptHub:, OptionSettingEdit_FaridehUltThreshold, % g_BrivUserSettings[ "FaridehUltThreshold" ]
             IC_BrivGemFarm_AdvancedSettings_Functions.LoadPreferredBrivJumpSettings()
         }
         Gui, ICScriptHub:Submit, NoHide
@@ -53,8 +53,8 @@ class IC_BrivGemFarm_AdvancedSettings_Component
         GUIFunctions.AddToolTip( "OptionSettingCheck_RestoreLastWindowOnGameOpen", "Whether the script will try to switch focus back to the last active window immediately when the game opens")
         GUIFunctions.AddToolTip( "OptionSettingCheck_IgnoreBrivHaste", "Ignore haste stacks when deciding to stack. Will force stacking one time each run. Predict Stacks will be turned off")
         GUIFunctions.AddToolTip( "OptionSettingCheck_FortOnlyRestart", "When running Forced Offline restarts IC will restart instantly rather than farming stacks while offline")
-        GUIFunctions.AddToolTip( "OptionSettingCheck_UseWardenUlt", "Use Warden's ult while stacking")
-        GUIFunctions.AddToolTip( "OptionSettingCheck_UseFaridehUlt", "Use Farideh's ult while stacking")
+        GUIFunctions.AddToolTip( "OptionSettingText_WardenUltThreshold", "Use Warden's ult while stacking when the number of enemies is greater than the threshold")
+        GUIFunctions.AddToolTip( "OptionSettingText_FaridehUltThreshold", "Use Farideh's ult while stacking when the number of enemies is greater than the threshold")
         GUIFunctions.AddToolTip( "OptionSettingText_ForceOfflineGemThreshold", "Stack offline only when this many gems are available for chest purchase (0 = disable)")
         GUIFunctions.AddToolTip( "OptionSettingText_ForceOfflineRunThreshold", "Stack offline once in every N runs as reported by Resets done of current core (0 or 1 = disable)")
         GUIFunctions.AddToolTip( "OptionSettingText_BrivJumpBuffer", "How many areas before a modron reset zone that switching to e formation over q formation is desired.")

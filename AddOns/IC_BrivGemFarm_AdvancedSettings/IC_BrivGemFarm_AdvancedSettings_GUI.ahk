@@ -26,14 +26,22 @@ Class IC_BrivGemFarm_AdvancedSettings_GUI
     {
         global
         ; Advanced Options Settings Group (Checkboxes only)
-        Gui, ICScriptHub:Add, GroupBox, Section x10 y+15 w215 h190 vWindowSettingsGroup, Advanced Options Settings
+        Gui, ICScriptHub:Add, GroupBox, Section x10 y+15 w215 h190 vWindowSettingsGroup, Advanced Settings
         GuiControlGet, ws, ICScriptHub:Pos, WindowSettingsGroup
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_HiddenFarmWindow xs+10 ys+20, Hide Gem Farm Window
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_RestoreLastWindowOnGameOpen xs+10 y+5, Restore Last Window On Game Open
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_IgnoreBrivHaste xs+10 y+5, Predict Stacks Off? (IgnoreBrivHaste)
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_FortOnlyRestart xs+10 y+5, No Stack FORTs
-        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_UseWardenUlt xs+10 y+5, Use Warden Ult When Stacking
-        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_UseFaridehUlt xs+10 y+5, Use Farideh Ult When Stacking
+
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_WardenUltThreshold xs+10 y+20 w40, % g_BrivUserSettings[ "WardenUltThreshold" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_WardenUltThreshold x+5 yp hp 0x200, Warden Ult Threshold (0 = off)
+        
+        GUIFunctions.UseThemeTextColor("InputBoxTextColor")
+        Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_FaridehUltThreshold xs+10 y+5 w40, % g_BrivUserSettings[ "FaridehUltThreshold" ]
+        GUIFunctions.UseThemeTextColor()
+        Gui, ICScriptHub:Add, Text, vOptionSettingText_FaridehUltThreshold x+5 yp hp 0x200, Farideh Ult Threshold (0 = off)
 
         ; Advanced Settings Group (Edit boxes/Numerical fields only)
         Gui, ICScriptHub:Add, GroupBox, x235 ys w215 h190 vAdvancedSettingsGroup, Advanced Settings
