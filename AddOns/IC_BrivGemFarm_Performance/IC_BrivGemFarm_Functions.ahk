@@ -1,7 +1,7 @@
 #include %A_LineFile%\..\..\..\SharedFunctions\ObjRegisterActive.ahk
 class IC_BrivGemFarm_Class
 {   
-    ; static FARIDEH_ID := 33
+    static FARIDEH_ID := 33
     ; static WARDEN_ID := 36
     ; static BRIV_ID := 58
     ; static MELF_ID := 59
@@ -27,10 +27,13 @@ class IC_BrivGemFarm_Class
     ClickSpam := "{ClickDmg}"
     LockLevelUp := False
     ; Levelup Addon compatability
+    ChampIDs := {}
     UsedWardenUlt := false
     UsedFaridehUlt := false
     SkipNextChestCheck := False
+    FaridehInParty := False
 
+    ; Speed Champs
     InitChamps()
     {
         this.ChampIDs := {}
@@ -626,6 +629,8 @@ class IC_BrivGemFarm_Class
             if (!foundKey)
                 levelingOptions[k] := v
         }
+        
+        this.FaridehInParty := IC_BrivGemFarm_Class.FARIDEH_ID == g_SF.Memory.ReadSelectedChampIDBySeat(g_SF.Memory.ReadChampSeatByID(IC_BrivGemFarm_Class.FARIDEH_ID))
         while ( stacksFarmed < stacksToFarm AND ElapsedTime < maxOnlineStackTime )
         {
             if (g_SF.Memory.ReadCurrentZone() < 1)
@@ -724,10 +729,8 @@ class IC_BrivGemFarm_Class
         ; StackNormalExtraLevelingTasks pre-tests this
         ; if (!( IsObject(IC_BrivGemFarm_LevelUp_Component) || IsObject(IC_BrivGemFarm_LevelUp_Class) )) ; No Levelup Addon
         ;     return
-        FaridehId := 33
-        isFaridehInParty := FaridehId == g_SF.Memory.ReadSelectedChampIDBySeat(g_SF.Memory.ReadChampSeatByID(FaridehId))
-        if (isFaridehInParty)
-            this.BGFLU_LevelUpChamp(FaridehId, this.BGFLU_GetTargetLevel(FaridehId), true) ; special redundant level Farideh x25
+        if (this.FaridehInParty)
+            this.BGFLU_LevelUpChamp(IC_BrivGemFarm_Class.FARIDEH_ID, this.BGFLU_GetTargetLevel(IC_BrivGemFarm_Class.FARIDEH_ID), true) ; special redundant level Farideh x25
         if (!IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive()) 
         {
             this.BGFLU_DoPartySetupMax(stackFormation)
@@ -738,7 +741,7 @@ class IC_BrivGemFarm_Class
             this.BGFLU_LevelUpChamp(ActiveEffectKeySharedFunctions.Briv.HeroID, amountToLevelBriv)
     }
 
-    ; Use Warden/Ferideh ults if conditons met.
+    ; Use Warden/Farideh ults if conditons met.
     UseUlts()
     {
         ; Warden ultimate

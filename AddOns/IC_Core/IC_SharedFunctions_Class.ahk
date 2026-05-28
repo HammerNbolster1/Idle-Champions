@@ -1436,7 +1436,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         return ElapsedTime < maxTime
     }
 
-    ; namely for warden and ferideh
+    ; namely for warden and farideh
     UseChampUltIfEnemyThresholdMet(champid, threshold := 0)
     {
         champInWFormation := g_SF.IsChampInFormation(champID, g_SF.Memory.GetFormationByFavorite(2))
