@@ -9,10 +9,6 @@ GUIFunctions.AddTab("BrivGF Advanced")
 ; Select the tab you created above
 Gui, ICScriptHub:Tab, BrivGF Advanced
 
-Gui, ICScriptHub:Font, w700
-Gui, ICScriptHub:Add, Text, , BrivGemFarm Advanced Settings
-Gui, ICScriptHub:Font, w400
-
 ;g_BrivUserSettings[ "IgnoreBrivHaste" ]
 ;g_BrivUserSettings[ "ForceOfflineGemThreshold" ]
 ;g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
@@ -22,6 +18,8 @@ Gui, ICScriptHub:Font, w400
 ;g_BrivUserSettings[ "RestoreLastWindowOnGameOpen" ]
 ;g_BrivUserSettings[ "WindowXPosition" ]
 ;g_BrivUserSettings[ "WindowYPosition" ]
+;g_BrivUserSettings[ "BrivLevelingThresholdsCount" ] 
+;g_BrivUserSettings[ "BrivLevelingThresholds" ]
 Class IC_BrivGemFarm_AdvancedSettings_GUI
 {
     Init()
@@ -92,8 +90,8 @@ Class IC_BrivGemFarm_AdvancedSettings_GUI
             Gui, ICScriptHub:Add, Text, h%ctrlH% 0x200 Hidden vBrivLevelingLevelText%A_Index%, Lvl
         }
         ; Initial layout
-        this.UpdateBrivLevelingRows(5)
-       
+        this.UpdateBrivLevelingRows(g_BrivUserSettings[ "BrivLevelingThresholdsCount" ] ? g_BrivUserSettings[ "BrivLevelingThresholdsCount" ] : 5)
+        this.LoadBrivLevelingThresholds(g_BrivUserSettings[ "BrivLevelingThresholds" ], g_BrivUserSettings[ "BrivLevelingThresholdsCount" ])
         GuiControlGet, pos, ICScriptHub:Pos, BrivLevelingGroup
         posY := posY + posH + 15
         if(IsObject(IC_BrivGemFarm_Component))
