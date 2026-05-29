@@ -419,7 +419,7 @@ class IC_BrivGemFarm_Stats_Component
         if(IsObject(IC_InventoryView_Component) AND g_InventoryView != "") ; If InventoryView AddOn is available
             g_InventoryView.ReadCombinedInventory(this.TotalRunCount)
         this.LastResetCount := resetsCount
-        if (this.SlowRunTime < this.PreviousRunTime AND this.TotalRunCount AND (!this.StackFail OR this.StackFail == 6))
+        if (this.SlowRunTime < this.PreviousRunTime AND this.TotalRunCount)
         {
             this.SlowRunTime := this.PreviousRunTime
             this.SlowestRun := this.TotalRunCount
@@ -447,9 +447,10 @@ class IC_BrivGemFarm_Stats_Component
     
     UpdateStartLoopStatsGUI()
     {
-        if (this.TotalRunCount AND (!this.StackFail OR this.StackFail == 6))
+        if (this.TotalRunCount)
         {
-            GuiControl, ICScriptHub:, FastRunTimeID, % this.FormatMsec(this.FastRunTime) . (this.FastestRun != "" ? (" [" . this.FastestRun . "]") : "")
+            if (!this.StackFail OR this.StackFail == 6)
+                GuiControl, ICScriptHub:, FastRunTimeID, % this.FormatMsec(this.FastRunTime) . (this.FastestRun != "" ? (" [" . this.FastestRun . "]") : "")
             GuiControl, ICScriptHub:, SlowRunTimeID, % this.FormatMsec(this.SlowRunTime) . (this.SlowestRun != "" ? (" [" . this.SlowestRun . "]") : "")
         }
         GuiControl, ICScriptHub:, PrevRunTimeID, % this.FormatMsec(this.PreviousRunTime)

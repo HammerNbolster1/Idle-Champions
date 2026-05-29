@@ -147,35 +147,23 @@ This will have side effects in that you may no longer have time to buy or open c
 
 You may also have less reliable offline stacking if you reduce the number too much.
 
-### Enable server calls to buy and open chests during stack restart?
+### Buy chests?
+When checked, the script will buy chests during offline stack resets.
 
-If this is unchecked, none of the boxes below will have any effect.
+### Gold Chest Ratio and Silver Chest Ratio
+Sliders that allow you to balance chest purchases. For example, setting the Gold Chest Ratio to 0.9 and Silver Chest Ratio to 0.1 will buy gold chests with 90% of available gems and silver chests with 10% of available gems.
 
-### Buy silver chests?
+### Open chests?
+When checked, the script will open chests during offline stack resets.
 
-The script will buy as many silver chests as it can during Briv's offline stack restart.
+### Reserve Chests (Gold / Silver)
+Allows you to specify a minimum quantity of gold and silver chests to keep in reserve. The script will not open chests below these thresholds.
 
-### Buy gold chests? Will not work if 'Buy Silver Chests?' is checked
+### Only buy/open max chests (250 buy/1000 open)
+When checked, the script will wait to make server calls until it can purchase a full batch of 250 chests or open a full batch of 1000 chests, which minimizes the number of server calls.
 
-The script will buy as many gold chests as it can during Briv's offline stack restart. It will only have an effect if the previous setting is unchecked.
-
-### Open silver chests?
-
-Opens all unopened Silver chests when set. This does not include any chests bought on the last restart.
-
-It will fail to work if your "Time (ms) client remains closed to trigger Restart Stacking (0 disables)" setting is too low (or set to 0).
-
-### Open gold chests?
-
-Opens all unopened Gold chests when set. This does not include any chests bought on the last restart.
-
-It will fail to work if your "Time (ms) client remains closed to trigger Restart Stacking (0 disables)" setting is too low (or set to 0).
-
-### Maintain this many gems when buying chests
-
-This setting is for you if you are, for example, saving up for a 100,000 gem familiar or just want to maintain a gem buffer.
-
-Just pop the value of the gems you want to save up or keep as a buffer in here.
+### Reserve this many gems when buying chests
+This setting is for maintaining a gem buffer (e.g. if you are saving up for a familiar). The script will not spend gems on chest purchases if your gem balance falls below this number.
 
 ## Further tips
 

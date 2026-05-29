@@ -1,3 +1,28 @@
+May 29, 2026
+    Added an option to turn off completing the zone before stacking.
+    Updated documentations (mostly settings descriptions).
+
+May 28, 2026
+    Fixed online stacking not completing zone first.
+    Fixed champion ultimates not firing.
+    Updated Imports to Steam v647.3.
+    Updated Farideh/Warden ultimates to be thresholds as intended instead of toggles.
+    Added FARIDEH_ID and corrected spellings.
+    Added more Advanced Settings options (Briv leveling thresholds count and zone configuration).
+    Generalized GUI functions and added validation/repositioning helpers.
+
+May 27, 2026
+    Integrated HybridTurboStacking features.
+
+April 19, 2026
+    Fixed issues with chest purchasing.
+
+April 18, 2026
+    Record forced restarts as longest runs.
+
+March 1, 2026
+    Fixed typo for a memory offset.
+
 January 24, 2026
     Removed BrivGemFarm requirement from ThemeManager.
     Added a check to the play button that will open the game if it's not already.

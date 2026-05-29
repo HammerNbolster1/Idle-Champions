@@ -5,32 +5,36 @@ class GUIFunctions
     isDarkMode := false
     CurrentTheme := ""
     FileOverride := ""
+    GUIName := "ICScriptHub"
 
     ; Adds a tab to Script Hub's tab control
     AddTab(Tabname){
+        guiName := this.GUIName
         addedTabs := Tabname . "|"
-        GuiControl,ICScriptHub:,ModronTabControl, % addedTabs
+        GuiControl,%guiName%:,ModronTabControl, % addedTabs
         g_TabList .= addedTabs
         ; Increase UI width to accommodate new tab.
         StrReplace(g_TabList,"|",,tabCount)
         g_TabControlWidth := Min(Max(Max(g_TabControlWidth,475), tabCount * 75), 550)
-        GuiControl, ICScriptHub:Move, ModronTabControl, % "w" . g_TabControlWidth . " h" . g_TabControlHeight
-        Gui, ICScriptHub:show, % "w" . g_TabControlWidth . " h" . g_TabControlHeight . " NA"
+        GuiControl, %guiName%:Move, ModronTabControl, % "w" . g_TabControlWidth . " h" . g_TabControlHeight
+        Gui, %guiName%:show, % "w" . g_TabControlWidth . " h" . g_TabControlHeight . " NA"
     }
 
     ; Updates the tab control's size based on global width/height settings
     RefreshTabControlSize()
     {
-        GuiControl, ICScriptHub:Move, ModronTabControl, % "w" . g_TabControlWidth . " h" . g_TabControlHeight
-        Gui, ICScriptHub:show, % "w" . g_TabControlWidth . " h" . g_TabControlHeight . " NA"
+        guiName := this.GUIName
+        GuiControl, %guiName%:Move, ModronTabControl, % "w" . g_TabControlWidth . " h" . g_TabControlHeight
+        Gui, %guiName%:show, % "w" . g_TabControlWidth . " h" . g_TabControlHeight . " NA"
     }
 
     ; Add a Button across the top of the GUI.
     AddButton(Picture,FunctionToCall,VariableName)
     {
         global
-        Gui, ICScriptHub:Tab
-        Gui, ICScriptHub:Add, Picture, x%g_MenuBarXPos% y5 h25 w25 g%FunctionToCall% v%VariableName% +0x4000000, %Picture%
+        local guiName := this.GUIName
+        Gui, %guiName%:Tab
+        Gui, %guiName%:Add, Picture, x%g_MenuBarXPos% y5 h25 w25 g%FunctionToCall% v%VariableName% +0x4000000, %Picture%
         g_MenuBarXPos+=30
     }
 
@@ -71,7 +75,8 @@ class GUIFunctions
     GetToolTipTarget(controlVariableName)
     {
         global
-        GuiControl ICScriptHub:Focus, %controlVariableName%
+        guiName := this.GUIName
+        GuiControl %guiName%:Focus, %controlVariableName%
         WinGet ICScriptHub_ID, ID, A
         ControlGetFocus toolTipTarget, ahk_id %ICScriptHub_ID%
         return ICScriptHub_ID . toolTipTarget
@@ -203,8 +208,9 @@ class GUIFunctions
     ; Will update the ByRef control passed in and then clear it after timer (ms) has expired (should not be negative number).
     UpdateStatusTextWithClear(byref controlVal, msg, timer)
     {
-        GuiControlGet, hwnd, ICScriptHub:Hwnd, controlVal
-        GuiControl, ICScriptHub:, %hwnd%, % msg
+        guiName := this.GUIName
+        GuiControlGet, hwnd, %guiName%:Hwnd, controlVal
+        GuiControl, %guiName%:, %hwnd%, % msg
         if(timer) ; != 0, != ""
         {
             clearFnc := ObjBindMethod(GUIFunctions, "ClearValueOfControl", hwnd)
@@ -215,7 +221,8 @@ class GUIFunctions
     ; Clears value from hwnd passed.
     ClearValueOfControl(hwnd)
     {
-        GuiControl, ICScriptHub:, %hwnd%, % ""
+        guiName := this.GUIName
+        GuiControl, %guiName%:, %hwnd%, % ""
     }
 
     ; Sets the color/weight for subsequent text based on the theme.
@@ -272,6 +279,62 @@ class GUIFunctions
                 }
             }
         }
+    }
+
+    ; Returns: - int:input or str:"RETURN" if input is invalid.
+    ; Validate string for integer inputs.
+    ValidateIntegerInput(min := 0, max := 1)
+    {
+        global
+        local guiName := this.GUIName
+        local beforeSubmit := % %A_GuiControl%
+        GuiControlGet, input,, %A_GuiControl%
+        if input is not digit
+        {
+            onlyDigits := RegExReplace(beforeSubmit, "[^\d]+")
+            GuiControl, %guiName%:Text, %A_GuiControl%, % onlyDigits
+            return "RETURN"
+        }
+        if input not between %min% and %max%
+        {
+            input := input < min ? min : max
+            GuiControl, %guiName%:Text, %A_GuiControl%, % input
+        }
+        if (beforeSubmit != "" && LTrim(input, 0) == beforeSubmit && (input . " ") != (beforeSubmit . " "))
+        {
+            input := LTrim(beforeSubmit, "0")
+            GuiControl, %guiName%:Text, %A_GuiControl%, % input
+        }
+        Gui, %guiName%:Submit, NoHide
+        return input
+    }
+
+    VerticalReposition(ctrlName, distance)
+    {
+        guiName := this.GUIName
+        GuiControlGet, ControlHwnd, Hwnd, %ctrlName%
+		GuiControlGet, pos, %guiName%:Pos, %ctrlName%
+        posY := posY + distance
+		GuiControl, %guiName%:MoveDraw, %ctrlName%, y%posY%
+        ; readjust position if it is not where intended
+		GuiControlGet, bug, %guiName%:Pos, %ctrlName%
+        posY -= (bugY - posY)
+		GuiControl, %guiName%:MoveDraw, %ctrlName%, y%posY%
+		Gui, %guiName%:Submit, NoHide
+    }
+
+    HorizontalReposition(ctrlName, distance)
+    {
+        guiName := this.GUIName
+        GuiControlGet, ControlHwnd, Hwnd, %ctrlName%
+		GuiControlGet, pos, %guiName%:Pos, %ctrlName%
+        posX := posX + distance
+		GuiControl, %guiName%:MoveDraw, %ctrlName%, x%posX%
+        ; readjust position if it is not where intended
+		GuiControlGet, bug, %guiName%:Pos, %ctrlName%
+        posX -= (bugX - posX)
+		GuiControl, %guiName%:MoveDraw, %ctrlName%, x%posX%
+		Gui, %guiName%:Submit, NoHide
     }
 
     ;------------------------------

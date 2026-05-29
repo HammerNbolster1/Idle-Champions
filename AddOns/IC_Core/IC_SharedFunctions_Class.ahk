@@ -63,7 +63,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     ; returns this class's version information (string)
     GetVersion()
     {
-        return "v3.1.0, 2025-11-23"
+        return "v3.2.0, 2026-05-29"
     }
 
     ;Takes input of first and second sets of eight byte int64s that make up a quad in memory. Obviously will not work if quad value exceeds double max.
@@ -1330,13 +1330,9 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     {
         Fkeys := {}
         for k, v in formation
-        {
             ;added a check that v is not 0 or "" for bad reads or NPC in saved formation some how, they show up as 0 supposedly.
             if ( v != -1 AND v )
-            {
                 Fkeys.Push("{F" . this.Memory.ReadChampSeatByID(v) . "}")
-            }
-        }
         return Fkeys
     }
 
@@ -1413,6 +1409,70 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             exponent := this.ConvertNumberSymbolToInt(out2)
         }
         return Round(exponent * 1000 + significand * 100)
+    }
+
+
+    ; Following functions added 05/2026 - repurposed HTS functions.
+    WaitForZoneCompleted(maxTime := 3000)
+    {
+        g_SF.SetFormation(g_BrivUserSettings)
+        highestZone := g_SF.Memory.ReadHighestZone()
+        StartTime := A_TickCount
+        ElapsedTime := 0
+        g_SharedData.BGFHTS_Status := "Stacking: Waiting for transition"
+        g_SF.WaitForTransition()
+        quest := g_SF.Memory.ReadQuestRemaining()
+        while (quest > 0 && ElapsedTime < maxTime)
+        {
+            quest := g_SF.Memory.ReadQuestRemaining()
+            g_SharedData.BGFHTS_Status := "Stacking: Waiting for area completion " . quest
+            if(ElapsedTime > maxTime / 2)
+                g_SF.SetFormation(g_BrivUserSettings, forceCheck := True)
+            else
+                g_SF.SetFormation(g_BrivUserSettings)
+            Sleep, 30
+            ElapsedTime := A_TickCount - StartTime
+        }
+        return ElapsedTime < maxTime
+    }
+
+    ; namely for warden and farideh
+    UseChampUltIfEnemyThresholdMet(champid, threshold := 0)
+    {
+        champInWFormation := g_SF.IsChampInFormation(champID, g_SF.Memory.GetFormationByFavorite(2))
+        if (champInWFormation && this.CheckMaxEnemies(threshold))
+            return this.UseChampUltimate(champID)
+        return false
+    }
+
+    UseChampUltimate(champID)
+    {
+        if ((ultButton := g_SF.GetUltimateButtonByChampID(champID)) != -1)
+            g_SF.DirectedInput(,, "{" . ultButton . "}")
+        return true
+    }
+
+    CheckMaxEnemies(threshold := 0)
+    {
+        if (threshold == 0 || threshold == "")
+            return true
+        if (g_SF.Memory.ReadActiveMonstersCount() > threshold)
+            return true
+        return false
+    }
+
+    ; Heal
+    HealHero(champID := 58)
+    {
+        if (champID < 1)
+            return ""
+        ; x10 = full heal
+        if (g_SF.Memory.ReadLevelUpAmount() != 10)
+            g_SF.DirectedInput(, release := 0, "{Shift}") ;keysdown
+        keys := ["{Shift}", "{F" . g_SF.Memory.ReadChampSeatByID(champID) . "}"]
+        g_SF.DirectedInput(, release := 0, keys*) ;keysdown
+        g_SF.DirectedInput(hold := 0,, keys*) ;keysup
+        return true
     }
 
     #include *i %A_LineFile%\..\IC_SharedFunctions_Extra.ahk

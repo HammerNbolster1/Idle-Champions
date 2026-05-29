@@ -1,6 +1,12 @@
 #include %A_LineFile%\..\..\..\SharedFunctions\ObjRegisterActive.ahk
 class IC_BrivGemFarm_Class
-{
+{   
+    static FARIDEH_ID := 33
+    ; static WARDEN_ID := 36
+    ; static BRIV_ID := 58
+    ; static MELF_ID := 59
+    ; static TATYANA_ID := 97
+
     TimerFunctions := {}
     TargetStacks := 0
     GemFarmGUID := ""
@@ -20,7 +26,14 @@ class IC_BrivGemFarm_Class
     DoneLeveling := False
     ClickSpam := "{ClickDmg}"
     LockLevelUp := False
+    ; Levelup Addon compatability
+    ChampIDs := {}
+    UsedWardenUlt := false
+    UsedFaridehUlt := false
+    SkipNextChestCheck := False
+    FaridehInParty := False
 
+    ; Speed Champs
     InitChamps()
     {
         this.ChampIDs := {}
@@ -102,6 +115,14 @@ class IC_BrivGemFarm_Class
     ;=====================================================
     ;Primary Gem Farm loop functions
     ;=====================================================
+    ; Records the end of a run for statistics.
+    RecordEndRun()
+    {
+        g_SharedData.LastRunTime := A_TickCount - This.ThisRunStart
+        , g_SharedData.TotalRunsCount += 1
+        This.ThisRunStart := A_TickCount
+    }
+
     ; setup steps to take to set up gem farm before starting the primary loop. Returns 0 on normal, negative on error.
     GemFarmPreLoopSetup(includeBrivFormation3 := False)
     {
@@ -165,7 +186,9 @@ class IC_BrivGemFarm_Class
         firstRun := False
         g_SharedData.PlayServer := StrSplit(StrSplit(g_ServerCall.webroot,".")[1], "/")[3]
         ; Do Chests after Reset
-        this.CheckAndDoChests()
+        if (!this.SkipNextChestCheck)
+            g_SharedData.LoopString := this.CheckAndDoChests()
+        this.SkipNextChestCheck := False
         
         if(doBasePartySetup)
         {
@@ -208,6 +231,7 @@ class IC_BrivGemFarm_Class
     ; Do things that are needed after a game reset from being stuck
     GemFarmDoStuckCleanup()
     {
+        this.RecordEndRun()
         g_SharedData.TriggerStart := true
         g_SharedData.StackFail := StackFailStates.FAILED_TO_PROGRESS ; 3
         g_SharedData.StackFailStats.TALLY[g_SharedData.StackFail] += 1
@@ -286,6 +310,9 @@ class IC_BrivGemFarm_Class
         ; Don't test while modron resetting.
         if (CurrentZone < 0 OR CurrentZone >= g_SF.ModronResetZone)
             return
+        ; TODO Add test for if boss zone stacking is necessary.
+        if (!Mod( g_SF.Memory.ReadCurrentZone(), 5)) ;land on boss zone = do not stack here.
+            return 0
         stacks := this.GetNumStacksFarmed()
         targetStacks := g_BrivUserSettings[ "TargetStacks" ]
         
@@ -326,6 +353,7 @@ class IC_BrivGemFarm_Class
         ; Briv ran out of jumps but has enough stacks for a new adventure, restart adventure. With protections from repeating too early or resetting within 5 zones of a reset.
         if (hasteStacks < 50 AND stacks >= targetStacks AND g_SF.Memory.ReadHighestZone() > 10 AND (g_SF.Memory.GetModronResetArea() - g_SF.Memory.ReadHighestZone() > 5 ))
         {
+            this.RecordEndRun()
             stackFail := StackFailStates.FAILED_TO_REACH_STACK_ZONE_HARD ; 4
             g_SharedData.StackFailStats.TALLY[stackfail] += 1
             forcedResetReason := "Briv ran out of jumps but has stacks for next. [@" . g_SF.Memory.ReadHighestZone() . "]"
@@ -343,41 +371,59 @@ class IC_BrivGemFarm_Class
         if !( (gemsMax > 0) OR (runsMax > 1) )
             return ( g_BrivUserSettings [ "RestartStackTime" ] > 0 )
         ; hybrid and already offline stacked
-        if (g_SF.AlreadyOfflineStackedThisRun)
-            return 0
+        if (this.DelayStackTest())
+            return False
         ; hybrid stacking by number of gems.
         if (gemsMax > 0 AND g_SF.Memory.ReadGems() > (gemsMax + g_BrivUserSettings[ "MinGemCount" ]))
-            return 1
+            return True
         ; hybrid stacking by number of runs.
+        ; Note: Uses reset count value so can stack restart early the first time.
         if (runsMax > 1)
         {
             memRead := g_SF.Memory.ReadResetsCount()
             if (memRead > 0 AND Mod( memRead, runsMax ) == 0)
-                return 1
+                return True
         }
         ; hybrid stacking enabled but conditions for offline stacking not met
-        return 0
+        return False
+    }
+
+    ; Determines if offline stacking is expected with current settings and conditions. Returns true if needs delay, false if needs stacking.
+    DelayStackTest()
+    {
+        if (g_SF.AlreadyOfflineStackedThisRun)
+            return True
+        return False
     }
 
     ;thanks meviin for coming up with this solution
     ;Gets total of SteelBonesStacks + Haste Stacks
     GetNumStacksFarmed()
     {
-        if (this.ShouldOfflineStack())
+        ;; OLD CODE In case of needed revert 
+        ; if (this.ShouldOfflineStack())
+        ; {
+        ;     currentStacks := g_BrivUserSettings[ "IgnoreBrivHaste" ] ? g_SF.Memory.ReadSBStacks() : ( (g_SF.Memory.ReadHasteStacks() + 0) + (g_SF.Memory.ReadSBStacks() + 0) )
+        ;     return currentStacks
+        ; } 
+        ; if (this.ShouldOfflineStack())
+        ;     this.StackRestart()
+        ;;
+        if (IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive())
         {
-            currentStacks := g_BrivUserSettings[ "IgnoreBrivHaste" ] ? g_SF.Memory.ReadSBStacks() : ( (g_SF.Memory.ReadHasteStacks() + 0) + (g_SF.Memory.ReadSBStacks() + 0) )
-            return currentStacks
+            sbStacks := g_SF.Memory.ReadSBStacks()
+            hasteStacksAfterReset := IC_BrivGemFarm_Class.BrivFunctions.PredictStacks(False,False,True)
+            stacksAfterReset := g_SF.BrivHasThunderStep() ? sbStacks * 1.2 + hasteStacksAfterReset: sbStacks + hasteStacksAfterReset
+            return stacksAfterReset
         }
         else
-        {
+            return g_SF.Memory.ReadSBStacks() + 48
             ; If restart stacking is disabled, we'll stack to basically the exact
             ; threshold.  That means that doing a single jump would cause you to
             ; lose stacks to fall below the threshold, which would mean StackNormal
             ; would happen after every jump.
-            ; Thus, we use a static 47 instead of using the actual haste stacks
+            ; Thus, we use a static 48 instead of using the actual haste stacks
             ; with the assumption that we'll be at minimum stacks after a reset.
-            return g_SF.Memory.ReadSBStacks() + 47
-        }
     }
     
     ; Assumes current jump value, does not account for featswapping.
@@ -404,7 +450,7 @@ class IC_BrivGemFarm_Class
         stackFormation := g_SF.Memory.GetFormationByFavorite(2)
         sTimer := new SH_SharedTimers()
         while(g_SF.Memory.ReadClickLevel() < g_SF.Memory.ReadCurrentZone() and !sTimer.isTimeUp(3000))
-            g_SF.DirectedInput(,, this.ClickSpam )
+            g_SF.DirectedInput(,,this.ClickSpam )
         this.LockLevelUp := False ; Allow leveling starting at 0 again for stacking champions.
         this.DoBasicLeveling(g_SF.GetFormationFKeys(stackFormation))
         inputValues := "{w}" ; Stack farm formation hotkey
@@ -442,7 +488,10 @@ class IC_BrivGemFarm_Class
     StackFarm()
     {
         if (this.ShouldOfflineStack())
-            this.StackRestart()
+            if(g_BrivUserSettings[ "FortOnlyRestart" ])
+                this.StackRestartFORTOnly()
+            else
+                this.StackRestart()
         else if (this.StackNormal() == 0)
             return
         ;SetFormation needs to occur before dashwait in case game erroneously placed party on boss zone after stack restart
@@ -463,18 +512,14 @@ class IC_BrivGemFarm_Class
     ; Stack Briv's SteelBones by switching to his formation and restarting the game.
     StackRestart()
     {
-        lastStacks := stacks := this.GetNumStacksFarmed()
-        targetStacks := g_BrivUserSettings[ "TargetStacks" ] + 0
-        if (stacks >= targetStacks)
-            return
-        numSilverChests := g_SF.Memory.ReadChestCountByID(1)
-        numGoldChests := g_SF.Memory.ReadChestCountByID(2)
-        gems := g_SF.Memory.ReadGems()
+        g_SF.AlreadyOfflineStackedThisRun := True
         retryAttempt := 0
         maxRetries := 2
         if (this.LastStackSuccessArea == 0)
             maxRetries := 1
-        while ( stacks < targetStacks AND retryAttempt <= maxRetries )
+        targetStacks := g_BrivUserSettings[ "TargetStacks" ] + 0
+        stacksFarmed := lastStacks := this.GetNumStacksFarmed()
+        while ( stacksFarmed < targetStacks AND retryAttempt <= maxRetries )
         {
             this.StackFailRetryAttempt++ ; per run
             retryAttempt++               ; pre stackfarm call
@@ -488,10 +533,8 @@ class IC_BrivGemFarm_Class
             }
             g_SF.CloseIC( "StackRestart" . (this.StackFailRetryAttempt > 1 ? (" - Warning: Retry #" . this.StackFailRetryAttempt - 1 . ". Check Stack Settings."): "") )
             g_SharedData.LoopString := "Stack Sleep: "
-            chestsCompletedString := ""
             StartTime := A_TickCount
             ElapsedTime := 0
-            chestsCompletedString := " " . this.DoChests(numSilverChests, numGoldChests, gems)
             while ( ElapsedTime < g_BrivUserSettings[ "RestartStackTime" ] )
             {
                 g_SharedData.LoopString := "Stack Sleep: " . g_BrivUserSettings[ "RestartStackTime" ] - ElapsedTime
@@ -499,38 +542,47 @@ class IC_BrivGemFarm_Class
                 ElapsedTime := A_TickCount - StartTime
             }
             g_SF.SafetyCheck(stackRestart := True)
-            stacks := this.GetNumStacksFarmed()
+            stacksFarmed := this.GetNumStacksFarmed()
+            this.SkipNextChestCheck := True
             ;check if save reverted back to below stacking conditions
             if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings[ "MinStackZone" ])
             {
-                g_SharedData.LoopString := "Stack Sleep: Failed (zone < min)"
-                Break  ; "Bad Save? Loaded below stack zone, see value."
+                g_SharedData.LoopString := "Stack Sleep: Bad Save? Z-Loaded < Min stack zone"
+                Break
             }
-            g_SharedData.PreviousStacksFromOffline := stacks - lastStacks
-            lastStacks := stacks
+            g_SharedData.PreviousStacksFromOffline := stacksFarmed - lastStacks
+            lastStacks := stacksFarmed
         }
-        if (retryAttempt >= maxRetries)
-        {
-            Loop, 4 ; add next 4 areas to failed stacks so next attempt would be CurrentZone + 4
-            {
-                this.StackFailAreasTally[g_SF.CurrentZone + A_Index - 1] := (this.StackFailAreasTally[g_SF.CurrentZone + A_Index - 1] == "") ? 1 : (this.StackFailAreasTally[g_SF.CurrentZone + A_Index - 1] + 1)
-                ; debugStackFailAreasTallyString := ArrFnc.GetDecFormattedAssocArrayString(this.StackFailAreasTally)
-                this.StackFailAreasThisRunTally[g_SF.CurrentZone + A_Index - 1] := 1
-                ; debugStackStackFailAreasThisRunTallyString := ArrFnc.GetDecFormattedAssocArrayString(this.StackFailAreasThisRunTally)
-                this.LastStackSuccessArea := 0
-            }
-        }
-        else if (retryAttempt == 1)
-        {
+        ; 5/19/2026 - incremental stack restart gain removed.
+        if (retryAttempt == 1)
             this.StackFailAreasTally[g_SF.CurrentZone] := 0
-            this.LastStackSuccessArea := g_SF.CurrentZone
-        }
-        else
-        {
-            this.LastStackSuccessArea := g_SF.CurrentZone
-        }
+        this.LastStackSuccessArea := g_SF.CurrentZone
         g_PreviousZoneStartTime := A_TickCount
+        this.StackRestartRecover()
+    }
+
+    StackRestartFORTOnly()
+    {
         g_SF.AlreadyOfflineStackedThisRun := True
+        g_SharedData.LoopString := "FORT Restart"
+        g_SF.ToggleAutoProgress(0)
+        g_PreviousZoneStartTime := A_TickCount ; reset zone start time after stacking
+        if(g_SharedData.TotalRunsCount > 0)
+            g_SF.CloseIC( "FORT Restart" )
+        g_SF.SafetyCheck(stackRestart := True)
+        this.StackRestartRecover()
+        ; SetFormation effectively called here after returning from this function by way of Stack continuing StackFarm()
+    }
+
+    StackRestartRecover()
+    {
+        if (g_SF.Memory.ReadNumAttackingMonstersReached() > 10 || g_SF.Memory.ReadNumRangedAttackingMonsters())
+            g_SF.FallBackFromZone() ; don't get stuck getting attacked.
+        if (g_SF.UnBenchBrivConditions(g_BrivUserSettings))
+            g_SF.DirectedInput(,, "{q}")
+        else if (g_SF.BenchBrivConditions(g_BrivUserSettings))
+            g_SF.DirectedInput(,, "{e}")
+        IC_BrivGemFarm_Class.BrivFunctions.HasSwappedFavoritesThisRun := True
     }
 
     /*  StackNormal - Stack Briv's SteelBones by switching to his formation and waiting for stacks to build.
@@ -541,51 +593,168 @@ class IC_BrivGemFarm_Class
     Returns:
     */
     ; Stack Briv's SteelBones by switching to his formation.
-    StackNormal(maxOnlineStackTime := 150000, targetStacks := 0, forceStack := False)
+    StackNormal(maxOnlineStackTime := 300000, targetStacks := 0)
     {
-        lastStacks := stacks := this.GetNumStacksFarmed()
-        targetStacks := targetStacks ? targetStacks : g_BrivUserSettings[ "TargetStacks" ]
-        if (this.ShouldAvoidRestack(stacks, targetStacks))
-            return
-        this.StackFarmSetup()
+        ; TODO:: Update target stacks if Thellora doesn't have enough stacks for the next run.
+        stacksStart := stacksFarmed := this.GetNumStacksFarmed() ; TODO: Previous behavior of GNSF() was would offline stack if ShouldOfflineStack says yes  
+        stacksToFarm := targetStacks ? targetStacks : g_BrivUserSettings[ "TargetStacks" ]
+        ; first checks should short circuit last check if failed.
+        if (this.ShouldAvoidRestack(stacks, stacksToFarm)) {
+            g_SharedData.LoopString .= " - Rejected. Already Stacked"
+            return 0
+        }
+        g_SF.ToggleAutoProgress( 0, false, true )
+        ; Complete the current zone
+        if ( g_BrivUserSettings[ "WaitForZoneCompleted" ] )
+            g_SF.WaitForZoneCompleted()
+        this.StackFarmSetup(setUIString := True)
+        g_SharedData.LoopString := "Stack Normal"
+
+        ; Stacking
+        ; Incremental Briv Leveling vars
         StartTime := A_TickCount
         ElapsedTime := 0
-        g_SharedData.LoopString := "Stack Normal"
         this.LockLevelUp := False ; Allow leveling starting at 0 again for stacking champions.
-        stackFormation := g_SF.GetFormationFKeys(g_SF.Memory.GetFormationByFavorite(2))
-        defaultLevelingKeys := g_SF.GetFormationFKeys(g_SF.Memory.GetFormationByFavorite(1))
-        levelingKeys := {}
+        amountToLevelBriv := this.StackNormalGetMoreBrivLeveling()
+        levelBrivSomeMore := amountToLevelBriv > 340
+        SBStacksStart := g_SF.Memory.ReadSBStacks()
+        if (!IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive())  ; Haste stacks are taken into account
+            stacksToFarm := stacksToFarm - stacksStart
+        stackFormation := this.GetFKeysForFormations(g_SF.Memory.GetFormationByFavorite(2))
+        defaultLevelingFormation := this.GetFKeysForFormations(g_SF.Memory.GetFormationByFavorite(1))
+        levelingOptions := {}
         ; add leveling keys not in stack formation - to level formation champs without leveling stacking team.
-        for k,v in defaultLevelingKeys
+        for k,v in defaultLevelingFormation
         {
             foundKey := false
             for key,value in stackFormation
                 if (v == value)
                     foundKey := True
             if (!foundKey)
-                levelingKeys[k] := v
+                levelingOptions[k] := v
         }
-        while ( stacks < targetStacks AND ElapsedTime < maxOnlineStackTime )
+        
+        this.FaridehInParty := IC_BrivGemFarm_Class.FARIDEH_ID == g_SF.Memory.ReadSelectedChampIDBySeat(g_SF.Memory.ReadChampSeatByID(IC_BrivGemFarm_Class.FARIDEH_ID))
+        while ( stacksFarmed < stacksToFarm AND ElapsedTime < maxOnlineStackTime )
         {
-            this.DoBasicLeveling(stackFormation)
-            this.DoLeveling( levelingKeys ) ; Level non-stacking champs and clickers while stacking.
-            g_SF.DirectedInput(,,"{w}")
+            if (g_SF.Memory.ReadCurrentZone() < 1)
+                return g_SharedData.LoopString := "Stacking interrupted due to game closed or reset"
+            if (!IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive())
+                g_SharedData.LoopString := "Stacking: " . (stacksStart + stacksFarmed ) . "/" . stacksToFarm
+            else
+                g_SharedData.LoopString := "Stacking: " . stacksFarmed . "/" . stacksToFarm
             g_SF.FallBackFromBossZone()
-            stacks := this.GetNumStacksFarmed()
-            Sleep, 62
+            this.StackNormalExtraLevelingTasks(levelingOptions, stackFormation)
+            if (IC_BrivGemFarm_Class.BrivFunctions.HasSwappedFavoritesThisRun AND g_SF.Memory.ReadMostRecentFormationFavorite() != 2) ; not in formation 2 still
+                this.StackFarmSetup()
+            else if (!this.IsCurrentFormationLazy(this.Memory.GetFormationByFavorite(2)))
+                this.StackFarmSetup()
+            else if ((!IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive()) and SBStacksFarmed < (stacksToFarm / 10) and ElapsedTime > 10000 ) ; not gaining stacks 
+                this.StackFarmSetup()
+            if (!IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive()) 
+                stacksFarmed := g_SF.Memory.ReadSBStacks() - SBStacksStart
+            else
+                stacksFarmed := this.GetNumStacksFarmed() ; TODO: Previous behavior of GNSF() was would offline stack if ShouldOfflineStack says yes
+            Sleep, 30
             ElapsedTime := A_TickCount - StartTime
         }
-        if ( ElapsedTime >= maxOnlineStackTime AND !forceStack)
+        this.UsedWardenUlt := False
+        this.UsedFaridehUlt := False
+        if ( ElapsedTime >= maxOnlineStackTime)
         {
+            this.RecordEndRun()
             this.RestartAdventure( "Online stacking took too long (> " . (maxOnlineStackTime / 1000) . "s) - z[" . g_SF.Memory.ReadCurrentZone() . "].")
             this.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
-            return
+            return ""
         }
-        this.LockLevelUp := False ; Allow leveling starting at 0 again after stacking since DoBasicLeveling locks it after stack formation is leveled.
         g_PreviousZoneStartTime := A_TickCount
-        g_SF.FallBackFromZone()
-        return
+        this.LockLevelUp := False ; Allow leveling starting at 0 again after stacking since DoBasicLeveling locks it after stack formation is leveled.
+        ; Go back to zone minus 1 if failed to complete the current zone
+        if (g_SF.Memory.ReadQuestRemaining() > 0)
+            g_SF.FallBackFromZone()
+        g_SF.ToggleAutoProgress( 1, false, true )
+        ; StackFarm won't be able to switch back to Q/E from W if the formation on the field isn't the exact
+        ; formation saved in the second favorite formationslot.
+        g_SF.SetFormation(g_BrivUserSettings)
+        g_SharedData.LoopString := "Online stacking done"
+        return ""
+    }
+
+    ; Test if Briv needs extra leveling based on zones reached.
+    StackNormalGetMoreBrivLeveling()
+    {
+        currentZone:= g_SF.Memory.ReadCurrentZone()
+        amountToLevelBriv := 0
+        thresholds := g_BrivUserSettings[ "BrivLevelingThresholds" ]
+        if (IsObject(thresholds))
+        {
+            ; Loop backwards from highest zone threshold
+            Loop, % thresholds.Length()
+            {
+                i := thresholds.Length() - A_Index + 1
+                if (currentZone >= thresholds[i].zone)
+                {
+                    amountToLevelBriv := thresholds[i].level
+                    break
+                }
+            }
+        }
+        if (amountToLevelBriv == 0)
+            amountToLevelBriv := this.BGFLU_GetTargetLevel(ActiveEffectKeySharedFunctions.Briv.HeroID, minOrMax := "Max") ; LevelUp adds this function
+        return amountToLevelBriv ? amountToLevelBriv : 0
+    }
+
+    ; Get Fkeys or Formaton depending on in LevelUp addon is being used.
+    GetFKeysForFormations(formation)
+    {
+        if (!( IsObject(IC_BrivGemFarm_LevelUp_Component) || IsObject(IC_BrivGemFarm_LevelUp_Class) )) ; No Levelup Addon
+            return g_SF.GetFormationFKeys( formation )
+        return formation
+        
+    }
+
+    ; Determines which leveling to method is used based on if levelup addon is being used.
+    StackNormalExtraLevelingTasks( levelingOptions, stackFormation )
+    {
+        if (!( IsObject(IC_BrivGemFarm_LevelUp_Component) || IsObject(IC_BrivGemFarm_LevelUp_Class) )) ; No Levelup Addon
+        {
+            this.DoBasicLeveling( stackFormation )
+            this.DoLeveling( levelingOptions ) ; Level non-stacking champs and clickers while stacking.
+        }
+        else
+            this.LevelUpAddonAvailableExtraLevelingTasks( levelingOptions, stackFormation )
+        this.UseUlts()
+    }
+
+    ; LevelUp addon style leveling should be used.
+    LevelUpAddonAvailableExtraLevelingTasks( levelingOptions, stackFormation )
+    {
+        ; StackNormalExtraLevelingTasks pre-tests this
+        ; if (!( IsObject(IC_BrivGemFarm_LevelUp_Component) || IsObject(IC_BrivGemFarm_LevelUp_Class) )) ; No Levelup Addon
+        ;     return
+        if (this.FaridehInParty)
+            this.BGFLU_LevelUpChamp(IC_BrivGemFarm_Class.FARIDEH_ID, this.BGFLU_GetTargetLevel(IC_BrivGemFarm_Class.FARIDEH_ID), true) ; special redundant level Farideh x25
+        if (!IC_BrivGemFarm_Class.BrivFunctions.PredictStacksActive()) 
+        {
+            this.BGFLU_DoPartySetupMax(stackFormation)
+            this.BGFLU_DoPartySetupMax(levelingOptions)
+            this.BGFLU_LevelUpChamp(ActiveEffectKeySharedFunctions.Briv.HeroID, amountToLevelBriv)
+        }
+        if (levelBrivSomeMore)
+            this.BGFLU_LevelUpChamp(ActiveEffectKeySharedFunctions.Briv.HeroID, amountToLevelBriv)
+    }
+
+    ; Use Warden/Farideh ults if conditons met.
+    UseUlts()
+    {
+        ; Warden ultimate
+        if (!this.UsedWardenUlt && g_BrivUserSettings[ "WardenUltThreshold" ] > 0)
+            this.UsedWardenUlt := g_SF.UseChampUltIfEnemyThresholdMet(WARDEN_ID := 36, g_BrivUserSettings[ "WardenUltThreshold" ])
+        
+        ; Farideh ultimate
+        if (!this.UsedFaridehUlt && g_BrivUserSettings[ "FaridehUltThreshold" ] > 0)
+            this.UsedFaridehUlt := g_SF.UseChampUltIfEnemyThresholdMet(FARIDEH_ID := 33, g_BrivUserSettings[ "FaridehUltThreshold" ])
     }
 
     ; Presses leveling keys including click leveling.
@@ -595,10 +764,10 @@ class IC_BrivGemFarm_Class
         this.DirectedInput(hold := True, release := True, spam*)
         this.DirectedInput(hold := True, release := True, spam*) 
         if(g_UserSettings[ "NoCtrlKeypress" ])
-            this.DirectedInput(,, "{ClickDmg}")
+            this.DirectedInput(,,this.ClickSpam)
         else { ; ctrl level clickers
-            this.DirectedInput(,release := 0, ["{RCtrl}","{ClickDmg}"]*) ;keysdown
-            this.DirectedInput(hold := 0,, ["{ClickDmg}","{RCtrl}"]*) ;keysup
+            this.DirectedInput(,release := 0, ["{RCtrl}",this.ClickSpam]*) ;keysdown
+            this.DirectedInput(hold := 0,, [this.ClickSpam,"{RCtrl}"]*) ;keysup
         }
     }
 
@@ -880,21 +1049,7 @@ class IC_BrivGemFarm_Class
     ;=====================================================
     ;Functions for direct server calls between runs
     ;=====================================================
-
-    ; Builds a string that shows how many chests have been opened/bought above the values passed into this function.
-    GetChestDifferenceString(lastPurchasedSilverChests, lastPurchasedGoldChests, lastOpenedGoldChests, lastOpenedSilverChests )
-    {
-        boughtSilver := g_SharedData.PurchasedSilverChests - lastPurchasedSilverChests 
-        boughtGold := g_SharedData.PurchasedGoldChests - lastPurchasedGoldChests
-        openedSilver := g_SharedData.OpenedSilverChests - lastOpenedSilverChests
-        openedGold := g_SharedData.OpenedGoldChests - lastOpenedGoldChests
-        buyString := (boughtSilver > 0 OR boughtGold > 0) ? "Buy: (" . boughtSilver . "s, " . boughtGold . "g)" : ""
-        openString := (openedSilver > 0 OR openedGold > 0) ? "Open: (" . openedSilver . "s, " . openedGold . "g)" : ""
-        separator := ((boughtSilver > 0 OR boughtGold > 0) AND (openedSilver > 0 OR openedGold > 0)) ? ", " : ""
-        returnString := buyString . separator . openString
-        return ((returnString != "") ? "Chests - " . returnString : "")
-    }
-    
+   
     CheckAndDoChests()
     {
         memorySilvers := g_SF.Memory.ReadChestCountByID(1)
@@ -912,7 +1067,7 @@ class IC_BrivGemFarm_Class
         this.previousSilverChestCount := memorySilvers
         this.previousGoldChestCount := memoryGolds
         
-        g_BrivGemFarm.DoChests(numSilverChests, numGoldChests, g_SF.Memory.ReadGems())
+        return g_BrivGemFarm.DoChests(numSilverChests, numGoldChests, g_SF.Memory.ReadGems())
     }
     
     ; Sends calls for buying or opening chests and tracks chest metrics.
@@ -944,7 +1099,21 @@ class IC_BrivGemFarm_Class
         ; after chests buy/open
         currentLoopString := this.GetChestDifferenceString(startingPurchasedSilverChests, startingPurchasedGoldChests, startingOpenedGoldChests, startingOpenedSilverChests)
         loopString := currentLoopString == "" ? loopString : currentLoopString
-        ; g_SharedData.LoopString := loopString
+        return loopString
+    }
+
+    ; Builds a string that shows how many chests have been opened/bought above the values passed into this function.
+    GetChestDifferenceString(lastPurchasedSilverChests, lastPurchasedGoldChests, lastOpenedGoldChests, lastOpenedSilverChests )
+    {
+        boughtSilver := g_SharedData.PurchasedSilverChests - lastPurchasedSilverChests 
+        boughtGold := g_SharedData.PurchasedGoldChests - lastPurchasedGoldChests
+        openedSilver := g_SharedData.OpenedSilverChests - lastOpenedSilverChests
+        openedGold := g_SharedData.OpenedGoldChests - lastOpenedGoldChests
+        buyString := (boughtSilver > 0 OR boughtGold > 0) ? "Buy: (" . boughtSilver . "s, " . boughtGold . "g)" : ""
+        openString := (openedSilver > 0 OR openedGold > 0) ? "Open: (" . openedSilver . "s, " . openedGold . "g)" : ""
+        separator := ((boughtSilver > 0 OR boughtGold > 0) AND (openedSilver > 0 OR openedGold > 0)) ? ", " : ""
+        returnString := buyString . separator . openString
+        return ((returnString != "") ? "Chests - " . returnString : "")
     }
     
     #include *i %A_LineFile%\..\IC_BrivGemFarm_Chests_Deprecated.ahk

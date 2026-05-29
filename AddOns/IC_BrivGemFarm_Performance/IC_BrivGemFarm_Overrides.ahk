@@ -19,7 +19,7 @@ class IC_BrivSharedFunctions_Class
         base.CloseIC(string)
         try
         {
-            if(!InStr(string, "FORT"))
+            if(!InStr(string, "FORT") AND !Instr(string, "StackRestart"))
                 g_ScriptHubComs.RunTimersOnModronResetEnd()
         }
     }

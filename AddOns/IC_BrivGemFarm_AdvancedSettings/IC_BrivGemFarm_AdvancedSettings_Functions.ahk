@@ -122,12 +122,12 @@ class IC_BrivGemFarm_AdvancedSettings_Functions
         {
             modVal := this.ModList[A_Index]
             yLoc += 20
-            Gui, ICScriptHub:Add, Text, x10 y%yLoc%, Mod %modVal%
-            ;yLoc += 20
+            Gui, ICScriptHub:Add, Text, x20 y%yLoc%, Mod %modVal%
             location := this.BuildModTable(modVal, xLoc, yLoc)
             xLoc := location[1]
             yLoc := location[2]
         }
+        return location
     }
 
     ; Builds one set of checkboxes for PreferredBrivJumpZones (e.g. Mod5 and associated checks)
@@ -148,7 +148,7 @@ class IC_BrivGemFarm_AdvancedSettings_Functions
                 xLoc += 35
             else
             {
-                xLoc := 10
+                xLoc := 20
                 yLoc += 20
             }
             this.AddControlCheckbox(isChecked, xLoc, yLoc, modval, modLoopIndex)    
@@ -169,7 +169,7 @@ class IC_BrivGemFarm_AdvancedSettings_Functions
     {
         global
         GuiControlGet, xyVal, ICScriptHub:Pos, PreferredBrivJumpSettingMod_%modVal%_%modVal%
-        return [xyValX, xyValY]
+        return [xyValX, xyValY, xyValH]
     }
 }
 

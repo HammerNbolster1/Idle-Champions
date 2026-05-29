@@ -1,6 +1,6 @@
 # Addon Management
 ## Description:
-This Addon will help you with the enabling and disabling of other Addons in the [IC Scripthub](https://github.com/mikebaldi/Idle-Champions).
+This Addon will help you with the enabling and disabling of other Addons in the [IC Scripthub](https://github.com/antilectual/Idle-Champions).
 It will read all addons in the addon folder and will list them, you'll have the choice to enable them or disable them.
 
 ## How to use:

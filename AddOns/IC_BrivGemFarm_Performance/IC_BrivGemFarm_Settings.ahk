@@ -54,6 +54,12 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
         g_BrivUserSettings[ "HiddenFarmWindow" ] := 0
     if ( g_BrivUserSettings[ "RestoreLastWindowOnGameOpen" ] == "" )
         g_BrivUserSettings[ "RestoreLastWindowOnGameOpen" ] := True
+    if (g_BrivUserSettings[ "IgnoreBrivHaste" ] == "" )
+        g_BrivUserSettings[ "IgnoreBrivHaste" ] := 0  
+    if ( g_BrivUserSettings[ "FortOnlyRestart" ] == "" )
+        g_BrivUserSettings[ "FortOnlyRestart" ] := False
+    if ( g_BrivUserSettings[ "WaitForZoneCompleted" ] == "" )
+        g_BrivUserSettings[ "WaitForZoneCompleted" ] := True
     if ( g_BrivUserSettings[ "ForceOfflineGemThreshold" ] == "" )
         g_BrivUserSettings[ "ForceOfflineGemThreshold" ] := 0
     if ( g_BrivUserSettings[ "ForceOfflineRunThreshold" ] == "" )
@@ -65,11 +71,17 @@ ReloadBrivGemFarmSettings(loadFromFile := True)
     if ( g_BrivUserSettings[ "WindowXPosition" ] == "" )
         g_BrivUserSettings[ "WindowXPosition" ] := 0
     if ( g_BrivUserSettings[ "WindowYPosition" ] == "" )
-        g_BrivUserSettings[ "WindowYPosition" ] := 0
-    if (g_BrivUserSettings[ "IgnoreBrivHaste" ] == "" )
-        g_BrivUserSettings[ "IgnoreBrivHaste" ] := 0   
+        g_BrivUserSettings[ "WindowYPosition" ] := 0 
+    if ( g_BrivUserSettings[ "WardenUltThreshold" ] == "" )
+        g_BrivUserSettings[ "WardenUltThreshold" ] := 0
+    if ( g_BrivUserSettings[ "FaridehUltThreshold" ] == "" )
+        g_BrivUserSettings[ "FaridehUltThreshold" ] := 0
     if ( g_BrivUserSettings[ "PreferredBrivJumpZones" ] == "")
 	    g_BrivUserSettings[ "PreferredBrivJumpZones" ] := [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] 
+    if (g_BrivUserSettings[ "BrivLevelingThresholdsCount" ] == "")
+        g_BrivUserSettings[ "BrivLevelingThresholdsCount" ] := 5
+    if (g_BrivUserSettings[ "BrivLevelingThresholds" ] == "")        
+        g_BrivUserSettings[ "BrivLevelingThresholds" ] := [{"zone": 1100, "level": 400}, {"zone": 1200, "level": 455}, {"zone": 1300, "level": 575}, {"zone": 1400, "level": 695}, {"zone": 1500, "level": 815}]
 
     ; =========================================
     ; LEGACY handling

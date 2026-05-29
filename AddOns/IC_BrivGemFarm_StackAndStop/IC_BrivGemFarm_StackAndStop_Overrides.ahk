@@ -39,8 +39,8 @@ class IC_BrivGemFarm_Component_StackAndStop_Added_Class
     }
 }
 
-; Overrides IC_BrivGemFarm_Class.GemFarmPreLoopSetup()
-; Overrides IC_BrivGemFarm_Class.TestEFormation()
+; Overrides IC_BrivGemFarm_Class.StackNormal()
+; Overrides IC_BrivGemFarm_Class.StackRestart()
 class IC_BrivGemFarm_StackAndStop_Class extends IC_BrivGemFarm_Class
 {
     ; Enables featswap after other setup settings
