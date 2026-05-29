@@ -605,7 +605,8 @@ class IC_BrivGemFarm_Class
         }
         g_SF.ToggleAutoProgress( 0, false, true )
         ; Complete the current zone
-        g_SF.WaitForZoneCompleted()
+        if ( g_BrivUserSettings[ "WaitForZoneCompleted" ] )
+            g_SF.WaitForZoneCompleted()
         this.StackFarmSetup(setUIString := True)
         g_SharedData.LoopString := "Stack Normal"
 

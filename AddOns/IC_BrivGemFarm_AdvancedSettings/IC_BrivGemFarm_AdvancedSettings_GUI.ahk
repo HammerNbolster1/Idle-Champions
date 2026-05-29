@@ -32,6 +32,7 @@ Class IC_BrivGemFarm_AdvancedSettings_GUI
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_RestoreLastWindowOnGameOpen xs+10 y+5, Restore Last Window On Game Open
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_IgnoreBrivHaste xs+10 y+5, Predict Stacks Off? (IgnoreBrivHaste)
         Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_FortOnlyRestart xs+10 y+5, No Stack FORTs
+        Gui, ICScriptHub:Add, Checkbox, vOptionSettingCheck_WaitForZoneCompleted xs+10 y+5, Complete Zone Before Stacking
 
         GUIFunctions.UseThemeTextColor("InputBoxTextColor")
         Gui, ICScriptHub:Add, Edit, vOptionSettingEdit_WardenUltThreshold xs+10 y+20 w40, % g_BrivUserSettings[ "WardenUltThreshold" ]
