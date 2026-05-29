@@ -1,40 +1,92 @@
 # BrivGemFarm_Performance Settings File
 ## Description:
-These are the currently available advanced settings for this AddOn. These are are for advanced users and must be set from within the ``BrivGemFarmSettings.json`` file.
+These are the settings used by the BrivGemFarm_Performance AddOn. They are saved in `BrivGemFarmSettings.json` and can be configured through the main Briv Gem Farm tab, the Advanced Settings tab, or edited directly in the JSON file.
 
-## Settings: 
+## Settings:
 
-* **BrivJumpBuffer** - 0-2000 (zones/areas)  
-This value tells the script how many areas before a modron reset zone that switching to e formation over q formation is desired. The value should be greater than the stack zone value, but less than the modron reset value. This helps resolve issues of Briv Stacks not being converted properly on modron resets.
-  
-* **DashWaitBuffer** - 0-? (time in ms)  
-**Updated:** DashWaitBuffer has been repurposed to be a distance from your modron's reset zone where dashwait will stop being activated. Default is 30.
-e.g. WIth the default value DashWait will not trigger if the script is started at 280 and then reset area is 305.
-~~Sometimes DashWait timer ends before Shandie gains dash. This setting adds a value in ms to the already set DashWait time. (Largely unnecessary as you can just increase your DashWait time.)~~
+* **LastSettingsUsed**: `<string>` (Default: "Default")  
+Stores the name of the last settings profile loaded or saved.
 
-* **DoChestsContinuous**: 0 / 1  
-If you are not satisfied with only 100/99 Buy/Open chests per run you can set this to 1. The script will buy and open as many as it can within the stack sleep time set. 
+* **Fkeys**: `0` / `1` (Default: `1`)  
+When set to 1, the script uses function keys (F1-F12) to level up champions in the active team automatically, eliminating the need for familiars on individual bench slots.
 
-> **Note:** The script will only open silver chests if there are at least 3 seconds left on Stack Reset Time, and will only open Gold Chests if there are at least 7 seconds left on Stack Reset time. These are estimations of how long the server takes to process the calls for opening 99 at a time. If you know these values are incorrect, or you don't mind losing BPH by waiting longer during Stack Resets, these values can be changed in the ``IC_BrivGemFarm_Functions.ahk`` script. They are set at the top of the ``BuyOrOpenChests()`` function.  
+* **StackFailRecovery**: `0` / `1` (Default: `1`)  
+Enables forced early restarts to recover when Briv runs out of haste stacks but has sufficient Steelbones stacks in reserve to proceed with a new run.
 
-> **WARNING:** Chest purchases happen very quickly. If the maintain gems setting is set incorrectly and this option is turned on, all gems could easily be spent, especially when buying gold chests.
+* **DisableDashWait**: `0` / `1` (Default: `0`)  
+When set to 1, completely disables waiting for Shandie's Dash to activate after a stack restart.
 
-> Particularly interesting when using hybrid stacking strategy and restarting e.g. every 100k gems. If hybrid stacking is activated together with continuous chest, script will continue buying even after Stack Reset Time has elapsed - only way for it to stop automatically is when all non-reserved gems are spent and all chests are open.
+* **StackZone**: `<integer>` (Default: `700`)  
+The zone number after which the script will begin farming Steelbones stacks for Briv (usually positioned a couple of zones prior to the Modron reset zone).
 
-* **ForceOfflineGemThreshold**
-Activates "hybrid stacking" (a.k.a. Hamerstein method a.k.a. Tatyana stacking). Makes the script prefer stacking online regardless of what `RestartStackTime` says, but do offline stacking once in a while to clear memory leaks and buy/open chests. Specified as available gems above the normal reserved amount.
+* **MinStackZone**: `<integer>` (Default: `200`)  
+The minimum area zone where Briv is allowed to farm Steelbones stacks (used as a fallback recovery limit).
 
-* **ForceOfflineRunThreshold**
-Same as `ForceOfflineGemThreshold`, but specified as max amount of runs based on "Resets Done", as reported by current core. Reset is forced on the last run (so setting to 1 also disables this setting, every run will be offline). If both thresholds are enabled, any of them matching will trigger offline restart.
+* **TargetStacks**: `<integer>` (Default: `0`)  
+The target number of haste stacks that the script should attempt to farm for the next run.
 
-* **HiddenFarmWindow**: 0 / 1  
-You can enable or disable the visibility of the second script window (the one that does the farming) by setting this value. 0 will have it show when it is run. 1 will hide it so only an icon in the tray appears.
+* **RestartStackTime**: `<integer>` (Default: `12000`)  
+The time in milliseconds that the client will remain closed during a stack restart (an offline stack restart is disabled if this is set to 0).
 
-* **RestoreLastWindowOnGameOpen**: 0 / 1  
-You can enable or disable whether the script will try to switch focus back to the last active window immediately when the game opens.  
+* **BuyChests**: `0` / `1` (Default: `1`)  
+Enables automatic purchasing of chests.
 
-* **WindowXPosition**:0
-This option allows you to set where the gem farm script will appear horizontally across your screen. 0 is default and is the far left of the screen. If you have HiddenFarmWindow set to 1 there is no reason to change this.
+* **OpenChests**: `0` / `1` (Default: `1`)  
+Enables automatic opening of chests.
 
-* **WindowYPosition**:0
-This option allows you to set where the gem farm script will appear vertically on your screen. 0 is default and is the very top of the screen. If you have HiddenFarmWindow set to 1 there is no reason to change this.
+* **MinGemCount**: `<integer>` (Default: `0`)  
+The minimum gem count to maintain. No chests will be purchased if your gem count falls below this threshold.
+
+* **BuyGoldChestRatio** / **BuySilverChestRatio**: `<decimal>` (Default: `1.0` / `0.0`)  
+Determines the proportion of chest purchases allocated to gold vs. silver chests. For example, 0.9 for gold and 0.1 for silver means 90% of spent gems buy gold chests and 10% buy silver chests.
+
+* **MinGoldChestCount** / **MinSilverChestCount**: `<integer>` (Default: `0`)  
+The number of gold or silver chests to keep in reserve. The script will open chests only above this quantity.
+
+* **WaitToBuyChests**: `0` / `1` (Default: `1`)  
+Known in the GUI as "Only buy/open max chests (250 buy/1000 open)". When set to 1, the script waits to buy or open chests until a full/max request size can be sent to reduce server load.
+
+* **FeatSwapEnabled**: `0` / `1` (Default: `0`)  
+Enables automatic feat swapping (such as Briv's Steelbones vs. Haste feats) at the appropriate zones (requires supporting addons).
+
+* **HiddenFarmWindow**: `0` / `1` (Default: `0`)  
+Hides the secondary command window launched by the script for farming when set to 1. Only a tray icon will be visible.
+
+* **RestoreLastWindowOnGameOpen**: `0` / `1` (Default: `1`)  
+When enabled, the script attempts to return focus to the last active window on your computer immediately after launching the game.
+
+* **IgnoreBrivHaste**: `0` / `1` (Default: `0`)  
+Known in the GUI as "Predict Stacks Off? (IgnoreBrivHaste)". When set to 1, ignores Briv's haste stacks when predicting/deciding when to stack, forcing offline stacking once per run.
+
+* **FortOnlyRestart**: `0` / `1` (Default: `0`)  
+Known in the GUI as "No Stack FORTs". When running Forced Offline restarts, the game will restart instantly rather than farming stacks while offline.
+
+* **WaitForZoneCompleted**: `0` / `1` (Default: `1`)  
+Known in the GUI as "Complete Zone Before Stacking". When checked, the script completes the current zone before starting online stacking.
+
+* **ForceOfflineGemThreshold**: `<integer>` (Default: `0`)  
+Activates "hybrid stacking" (HTS). Forces the script to perform an offline stack restart once the number of gems earned above your reserve limit reaches this threshold (0 = disable).
+
+* **ForceOfflineRunThreshold**: `<integer>` (Default: `0`)  
+Same as `ForceOfflineGemThreshold`, but specified as the number of runs based on "Resets Done" as reported by the current Modron core. An offline stack restart is forced every N runs (0 or 1 = disable). If both run and gem thresholds are set, either reaching its threshold will trigger the stack restart.
+
+* **BrivJumpBuffer**: `<integer>` (Default: `0`)  
+The number of areas before the Modron reset zone where the script will switch from the 'q' (jump) formation to the 'e' (non-jump) formation to ensure stacks convert properly.
+
+* **DashWaitBuffer**: `<integer>` (Default: `30`)  
+The distance from your Modron's reset zone where dashwait will stop being activated.
+
+* **WindowXPosition** / **WindowYPosition**: `<integer>` (Default: `0` / `0`)  
+Sets the horizontal and vertical screen coordinates where the gem farm script window appears on your monitor.
+
+* **WardenUltThreshold** / **FaridehUltThreshold**: `<integer>` (Default: `0`)  
+Triggers Warden's or Farideh's ultimates while stacking when the number of enemies exceeds the specified threshold (0 = off).
+
+* **PreferredBrivJumpZones**: `<array>`  
+An array of 50 binary values representing the zones in a 50-zone cycle where Briv jumps are preferred (`1` allows jumping, `0` disables).
+
+* **BrivLevelingThresholdsCount**: `<integer>` (Default: `5`)  
+Specifies the count of custom zone leveling thresholds for Briv.
+
+* **BrivLevelingThresholds**: `<array>`  
+Contains the custom zone and level mapping array (e.g. `[{"zone": 1100, "level": 400}, ...]`) for auto-leveling Briv.

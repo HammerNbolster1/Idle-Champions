@@ -18,14 +18,11 @@ Many advanced settings are hidden from the UI to make the new user experience mo
     * Addons are great for developers. If there is a feature missing, it is relatively easy to create (or ask for someone to create) an Addon that does what you want using generic shared functions.
 
 * **How does BrivGemFarm handle buying and opening chests?**  
-The logic works like this:
-  * If there is at least .1 seconds left during stack restart and your gems are higher than the maintenance level, it will **buy** between 0 and 100 **silver chests** depending on what you can afford.
-  * THEN if there is still at least .1 seconds left during stack restart and your gems are higher than the maintenance level, it will **buy** between 0 and 100 **gold chests** depending on what you can afford.
-  * THEN if there is still at least 3 seconds left during stack restart and you have unopened silvers, it will **open** between 0-99 **silver chests** depending on how many you have.
-  * THEN if there is still at least 3 seconds left during stack restart and you have unopened golds, it will **open** between 0-99 **gold chests** depending on how many you have.
+  Buying and opening chests are handled by a background ServerCall script to avoid pausing or lagging the main gem farm. The settings allow you to configure:
+  * **Buy Chests**: Specify whether the script should buy chests, using a ratio slider to balance gold vs silver chest purchases (e.g. 0.9 Gold / 0.1 Silver).
+  * **Open Chests**: Specify whether the script should open chests. You can set a reserve limit for both gold and silver chests so the script doesn't open them below those numbers.
+  * **Max Chests Only**: There is an option to only buy/open max chests (250 buy / 1000 open per server call) to optimize server calls.
+  * **Gem Reserves**: Specify a gem reserve value under which no chests will be bought.
 
-  If the advanced setting ``DoChestsContinuous`` is set to 1, it will repeat this process as long as there is time during the Stack Reset.  
-  > **WARNING:** Be careful setting this value to 1. MANY purchases can happen during a reset and gems will seemingly evaporate.  
-
-* **NEW! Can I run the Gem Farm script on multiple platforms at the same time?**  
+* **Can I run the Gem Farm script on multiple platforms at the same time?**  
 Yes! To run the script on multiple platforms first requires a copy of the entire IC Script Hub for each platform that will be used. Game detection is based on exe name so one platform will need the `IdleDragons.exe` to be renamed (e.g. IdleDragonsSteam.exe) and the `IdleDragons_Data` folder to be renamed in the same way (e.g. IdleDragonsSteam_Data). Set up each script with their own settings. The important thing is to remember to set the Install exe to the new renamed exe in the game location.

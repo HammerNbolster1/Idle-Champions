@@ -28,7 +28,7 @@ The script then automates the progression through many, many modron core resets 
 
 The primary aim of the gem farm script is to automate farming gems that you use to increase your champion power by accumulating gems for a specific goal. 
 
-You can set the script to buy either silver or gold chests as you stack Briv for the next run.
+You can configure the script to buy and open gold and/or silver chests based on customizable purchase ratios and reserve limits.
 
 ### Continue to more information
 

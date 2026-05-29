@@ -1,5 +1,6 @@
 May 29, 2026
     Added an option to turn off completing the zone before stacking.
+    Updated documentations (mostly settings descriptions).
 
 May 28, 2026
     Fixed online stacking not completing zone first.

@@ -20,15 +20,27 @@ This can be enabled or disabled. When Enabled IC Script Hub will hide the window
 
 This setting will tell the script to try and switch back from the game window to whatever window was open before the game window opened after a stack restart. 
 
-## "IgnoreBrivHaste" (Not shown)
+## "IgnoreBrivHaste"
+This setting will make the script not take into account any haste settings on Briv when deciding how many stacks to farm. It is shown in the GUI as "Predict Stacks Off? (IgnoreBrivHaste)".
 
-This setting will make the script not take into account any haste settings on Briv when deciding how many stacks to farm.
+## "ForceOfflineGemThreshold"
+The gem farm script is designed to restart the game periodically to build stacks for Briv and keep game performance optimal. This setting enables "hybrid stacking", letting you postpone the offline stack restart until the number of gems earned reaches the threshold configured here (0 = disable).
 
-## "ForceOfflineGemThreshold" (Not shown)
-The gem farm script is designed to restart the game each run to build stacks for Briv and to keep game performance optimal. This setting allows the the briv stack restart to be postponed until the number of gems reaches what is set here.
+## "ForceOfflineRunThreshold"
+Similar to `ForceOfflineGemThreshold`, but triggers the offline stack restart once every N Modron resets (runs) reaches the set value (0 or 1 = disable). If both run and gem thresholds are set, either reaching its threshold will trigger the stack restart.
 
-## "ForceOfflineRunThreshold" (Not shown)
-Same as the above but will do the stack restart once the number of modron resets (runs) reaches the set value. 
+## "FortOnlyRestart"
+Known in the GUI as "No Stack FORTs". When running Forced Offline restarts, Idle Champions will restart instantly rather than farming stacks while offline.
+
+## "WaitForZoneCompleted"
+Known in the GUI as "Complete Zone Before Stacking". When checked, the script completes the current zone before starting online stacking.
+
+## "WardenUltThreshold" / "FaridehUltThreshold"
+Use Warden's or Farideh's ultimates while stacking when the number of enemies exceeds this threshold (0 = off).
+
+## "Briv Leveling by Zone"
+Allows configuring specific zone levels where Briv should be leveled. You can configure the number of leveling zones (up to 15) and specify the Zone and corresponding Level (Lvl) for each threshold.
+
 
 ## "BrivJumpBuffer"
 
@@ -51,3 +63,5 @@ Each mission cycles through 50 zones. This setting allows you to choose which of
 Some examples:  
 - Disabling all zones ending in 5 or 0 will ensure 4/9j Briv will return to skipping bosses after defeating a boss if they erronously land on one. Do this by clicking on the 5 checkbox in the Mod 5 area.
 - Skipping specific zones that have troublesome enemies/bosses (e.g. armored/hit based) can be done by unchecking zones that are at that zone-(jump level + 1). (e.g. to avoid landing on 50 with 7j Briv, you would uncheck 50-(7+1)=42).
+
+** Note: The Route Presets are from an addon created by Emmote.
