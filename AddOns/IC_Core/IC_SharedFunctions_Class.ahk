@@ -63,7 +63,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     ; returns this class's version information (string)
     GetVersion()
     {
-        return "v3.1.0, 2025-11-23"
+        return "v3.2.0, 2026-05-29"
     }
 
     ;Takes input of first and second sets of eight byte int64s that make up a quad in memory. Obviously will not work if quad value exceeds double max.
